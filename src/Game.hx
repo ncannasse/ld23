@@ -28,7 +28,7 @@ class Game implements haxe.Public {
 			y = rnd.random(World.SIZE);
 			switch( world.get(x,y) )
 			{
-				case Sea, Mountain:
+				case DarkSea, Sea, Mountain:
 					continue;
 				default:
 					var found = false;

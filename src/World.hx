@@ -27,6 +27,22 @@ class World {
 				}
 			}
 		}
+		for( x in 0...SIZE )
+			for( y in 0...SIZE )
+				if( get(x, y) == Sea ) {
+					var found = false;
+					for( dx in -2...3 )
+						for( dy in -2...3 )
+							if( x + dx >= 0 && y + dy >= 0 && x + dx < SIZE && y + dy < SIZE )
+								switch(t[x+dx][y+dy])
+								{
+									case Sea,DarkSea:
+									default:
+										found = true;
+								}
+					if( !found )
+						set(x, y, DarkSea);
+				}
 		bmp.dispose();
 	}
 	

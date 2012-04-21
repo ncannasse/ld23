@@ -8,9 +8,11 @@ enum Block {
 	Mountain;
 	Sand;
 	Sea;
+	DarkSea;
 }
 
 enum MonsterKind {
 	Walker;
 	Soldier;
+	WoodCuter;
 }

@@ -11,7 +11,7 @@ class City {
 		game = g;
 		this.x = x;
 		this.y = y;
-		mc = new flash.display.Bitmap(game.tiles.t[5][0]);
+		mc = new flash.display.Bitmap(game.tiles.t[6][0]);
 		mc.x = x * 5;
 		mc.y = y * 5;
 		game.root.addChild(mc);
