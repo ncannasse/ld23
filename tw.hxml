@@ -1,0 +1,4 @@
+-cp src
+-swf9 tw.swf
+-swf-header 640:680:40:000000
+-swf-version 9

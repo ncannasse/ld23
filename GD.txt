@@ -1,0 +1,32 @@
+Tiny World
+----------
+
+- Small pixel-size world 
+	generated ? -> depends on replayability
+	gfx = 5x5 blocks ?
+
+- Cities
+	each city belong to an Empire
+	
+- Empire
+	have kings / behaviors
+	have allies / ennemies
+	raise armies
+	attack other cities
+	build territory
+
+- Mines
+	appear on the map
+	exploited by empires
+	give ressources
+	
+- Player
+	have a city
+	need to turn it into an empire
+	
+- Monsters
+	wander in the world
+	attack cities
+	might have generators
+	some bosses are powerful
+
