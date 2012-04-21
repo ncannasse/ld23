@@ -33,6 +33,14 @@ class Main {
 		return n;
 	}
 	
+	function soilKind( k : Block ) {
+		return switch(k) {
+			case Sea: -1;
+			case Sand: 1;
+			default: 2;
+		}
+	}
+	
 	function drawWorld() {
 		var w = new flash.display.BitmapData(World.SIZE * 5, World.SIZE * 5, true, 0);
 		var rall = new flash.geom.Rectangle(0, 0, 5, 5);
@@ -46,37 +54,34 @@ class Main {
 			}
 		for( x in 1...World.SIZE-1 )
 			for( y in 1...World.SIZE-1 ) {
+				var t = world.t[x][y];
 				var tleft = world.t[x - 1][y];
 				var tright = world.t[x + 1][y];
 				var tup = world.t[x][y-1];
 				var tdown = world.t[x][y + 1];
-				switch( world.t[x][y] ) {
-				case Sea:
-					var left = tleft != Sea;
-					var right = tright != Sea;
-					var up = tup != Sea;
-					var down = tdown != Sea;
-					if( left && up )
-						w.setPixel32(x * 5, y * 5, tiles.getColor(tleft));
-					if( right && up )
-						w.setPixel32(x * 5 + 4, y * 5, tiles.getColor(tright));
-					if( left && down )
-						w.setPixel32(x * 5, y * 5 + 4, tiles.getColor(tleft));
-					if( right && down )
-						w.setPixel32(x * 5 + 4, y * 5 + 4, tiles.getColor(tright));
-				default:
-					var left = tleft == Sea;
-					var right = tright == Sea;
-					var up = tup == Sea;
-					var down = tdown == Sea;
-					if( left && up )
-						w.setPixel32(x * 5, y * 5, tiles.getColor(Sea));
-					if( right && up )
-						w.setPixel32(x * 5 + 4, y * 5, tiles.getColor(Sea));
-					if( left && down )
-						w.setPixel32(x * 5, y * 5 + 4, tiles.getColor(Sea));
-					if( right && down )
-						w.setPixel32(x * 5 + 4, y * 5 + 4, tiles.getColor(Sea));
+				var k = soilKind(t);
+				var left = soilKind(tleft);
+				var right = soilKind(tright);
+				var up = soilKind(tup);
+				var down = soilKind(tdown);
+				if( k == 20 ) {
+					if( left != k && up != k )
+						w.setPixel32(x * 5, y * 5, tiles.getColor(left > up ? tleft : tup));
+					if( right != k && up != k )
+						w.setPixel32(x * 5 + 4, y * 5, tiles.getColor(right > up ? tright : tup));
+					if( left != k && down != k )
+						w.setPixel32(x * 5, y * 5 + 4, tiles.getColor(left > down ? tleft : tdown));
+					if( right != k && down != k )
+						w.setPixel32(x * 5 + 4, y * 5 + 4, tiles.getColor(right > down ? tright : tdown));
+				} else {
+					if( left != k && up != k )
+						w.setPixel32(x * 5, y * 5, tiles.getColor(left > k || up > k ? left > up ? tleft : tup : (left < 0 && up < 0 ? tleft : t)));
+					if( right != k && up != k )
+						w.setPixel32(x * 5 + 4, y * 5, tiles.getColor(right > k || up > k ? right > up ? tright : tup : (right < 0 && up < 0 ? tright : t)));
+					if( left != k && down != k )
+						w.setPixel32(x * 5, y * 5 + 4, tiles.getColor(left > k || down > k ? left > down ? tleft : tdown : (left < 0 && down < 0 ? tleft : t)));
+					if( right != k && down != k )
+						w.setPixel32(x * 5 + 4, y * 5 + 4, tiles.getColor(right > k || down > k ? right > down ? tright : tdown : (right < 0 && down < 0 ? tright : t)));
 				}
 			}
 		root.addChild(new flash.display.Bitmap(w));
