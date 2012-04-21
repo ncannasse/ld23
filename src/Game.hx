@@ -158,13 +158,13 @@ class Game implements haxe.Public {
 		}
 		
 		if( hero.canMove() ) {
-			if( Key.isDown(K.LEFT) && !collide(hero.x-1,hero.y) )
+			if( (Key.isDown(K.LEFT) || Key.isDown("A".code) || Key.isDown("Q".code)) && !collide(hero.x-1,hero.y) )
 				hero.x--;
-			else if( Key.isDown(K.RIGHT) && !collide(hero.x + 1, hero.y) )
+			else if( (Key.isDown(K.RIGHT) || Key.isDown("D".code)) && !collide(hero.x + 1, hero.y) )
 				hero.x++;
-			else if( Key.isDown(K.UP) && !collide(hero.x,hero.y - 1) )
+			else if( (Key.isDown(K.UP) || Key.isDown("Z".code) || Key.isDown("W".code)) && !collide(hero.x,hero.y - 1) )
 				hero.y--;
-			else if( Key.isDown(K.DOWN) && !collide(hero.x, hero.y + 1) )
+			else if( (Key.isDown(K.DOWN) || Key.isDown("S".code)) && !collide(hero.x, hero.y + 1) )
 				hero.y++;
 			else
 				hero.frame = 0;
