@@ -1,12 +1,13 @@
-import World;
+import Common;
+import Logic;
 
-typedef SPR = flash.display.Sprite;
-
-class Main {
+class Main implements haxe.Public {
 	
 	var root : SPR;
 	var world : World;
 	var tiles : Tiles;
+	var cities : Array<City>;
+	var rnd : Rand;
 	
 	function new(root) {
 		this.root = root;
@@ -14,24 +15,30 @@ class Main {
 		root.scaleX = root.scaleY = 2;
 		world = new World();
 		tiles = new Tiles();
+	}
+	
+	function init() {
 		drawWorld();
+
+		cities = [];
+		rnd = new Rand(42);
+		for( i in 0...20 ) {
+			var x, y;
+			do {
+				x = rnd.random(World.SIZE);
+				y = rnd.random(World.SIZE);
+				switch( world.get(x,y) )
+				{
+					case Sea, Mountain:
+						continue;
+					default:
+						break;
+				}
+			} while( true );
+			cities.push(new City(x,y));
+		}
 	}
 
-	function hash(n) {
-		for( i in 0...5 ) {
-			n ^= (n << 7) & 0x2b5b2500;
-			n ^= (n << 15) & 0x1b8b0000;
-			n ^= n >>> 16;
-			n &= 0x3FFFFFFF;
-			var h = 5381;
-			h = (h << 5) + h + (n & 0xFF);
-			h = (h << 5) + h + ((n >> 8) & 0xFF);
-			h = (h << 5) + h + ((n >> 16) & 0xFF);
-			h = (h << 5) + h + (n >> 24);
-			n = h & 0x3FFFFFFF;
-		}
-		return n;
-	}
 	
 	function soilKind( k : Block ) {
 		return switch(k) {
@@ -50,7 +57,7 @@ class Main {
 				var t = tiles.t[Type.enumIndex(world.t[x][y])];
 				p.x = x * 5;
 				p.y = y * 5;
-				w.copyPixels(t[hash(x + y * World.SIZE) % t.length], rall, p);
+				w.copyPixels(t[Rand.hash(x + y * World.SIZE) % t.length], rall, p);
 			}
 		for( x in 1...World.SIZE-1 )
 			for( y in 1...World.SIZE-1 ) {
@@ -92,5 +99,6 @@ class Main {
 	static function main() {
 		haxe.Log.setColor(0xFF0000);
 		inst = new Main(flash.Lib.current);
+		inst.init();
 	}
 }

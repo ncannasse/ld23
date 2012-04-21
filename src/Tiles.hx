@@ -1,3 +1,5 @@
+import Common;
+
 @:bitmap("gfx/tiles.png")
 class TilesBmp extends flash.display.BitmapData {
 }
@@ -26,16 +28,22 @@ class Tiles {
 		tiles.dispose();
 	}
 	
-	public function getColor( c : World.Block ) {
+	public function getColor( c : Block ) {
 		return t[Type.enumIndex(c)][0].getPixel32(0, 0);
 	}
 	
 	function isEmpty( b : flash.display.BitmapData ) {
+		var empty = true;
 		for( x in 0...5 )
-			for( y in 0...5 )
-				if( b.getPixel32(x, y) != colorBG )
-					return false;
-		return true;
+			for( y in 0...5 ) {
+				var color = b.getPixel32(x, y);
+				if( color != colorBG ) {
+					empty = false;
+					if( Std.int(color) == 0xFFFE00FE )
+						b.setPixel32(x, y, 0);
+				}
+			}
+		return empty;
 	}
 	
 }

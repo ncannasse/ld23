@@ -1,13 +1,7 @@
+import Common;
+
 @:bitmap("gfx/world.png")
 class WorldBmp extends flash.display.BitmapData {
-}
-
-enum Block {
-	Field;
-	Forest;
-	Mountain;
-	Sand;
-	Sea;
 }
 
 class World {
@@ -33,6 +27,10 @@ class World {
 			}
 		}
 		bmp.dispose();
+	}
+	
+	public inline function get(x, y) {
+		return t[x][y];
 	}
 	
 }
