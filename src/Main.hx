@@ -4,6 +4,7 @@ import Logic;
 class Main implements haxe.Public {
 	
 	var root : SPR;
+	var ui : SPR;
 	var world : World;
 	var tiles : Tiles;
 	var cities : Array<City>;
@@ -11,15 +12,15 @@ class Main implements haxe.Public {
 	
 	function new(root) {
 		this.root = root;
-		root.y = 20;
+		root.stage.scaleMode = flash.display.StageScaleMode.NO_SCALE;
 		root.scaleX = root.scaleY = 2;
+		ui = new SPR();
+		root.parent.addChild(ui);
 		world = new World();
 		tiles = new Tiles();
 	}
 	
 	function init() {
-		drawWorld();
-
 		cities = [];
 		rnd = new Rand(42);
 		for( i in 0...20 ) {
@@ -31,12 +32,16 @@ class Main implements haxe.Public {
 				{
 					case Sea, Mountain:
 						continue;
+					case Forest:
+						world.set(x, y, Field);
+						break;
 					default:
 						break;
 				}
 			} while( true );
 			cities.push(new City(x,y));
 		}
+		drawWorld();
 	}
 
 	
@@ -52,12 +57,29 @@ class Main implements haxe.Public {
 		var w = new flash.display.BitmapData(World.SIZE * 5, World.SIZE * 5, true, 0);
 		var rall = new flash.geom.Rectangle(0, 0, 5, 5);
 		var p = new flash.geom.Point();
-		for( x in 0...World.SIZE )
-			for( y in 0...World.SIZE ) {
-				var t = tiles.t[Type.enumIndex(world.t[x][y])];
-				p.x = x * 5;
-				p.y = y * 5;
-				w.copyPixels(t[Rand.hash(x + y * World.SIZE) % t.length], rall, p);
+		var p0 = new flash.geom.Point();
+		for( y in 0...World.SIZE )
+			for( x in 0...World.SIZE ) {
+				var t = world.get(x, y);
+				var dx = 0, dy = 0;
+				switch(t)
+				{
+					case Forest, Mountain:
+						// draw soil
+						var s = tiles.t[Type.enumIndex(Field)];
+						p.x = x * 5;
+						p.y = y * 5;
+						w.copyPixels(s[Rand.hash(x + y * World.SIZE) % s.length], rall, p);
+						// move tree around
+						dx = rnd.random(3) - 1;
+						dy = rnd.random(4) == 0 ? -1 : 0;
+					default:
+				}
+				var t = tiles.t[Type.enumIndex(t)];
+				p.x = x * 5 + dx;
+				p.y = y * 5 + dy;
+				var bmp = t[Rand.hash(x + y * World.SIZE) % t.length];
+				w.copyPixels(bmp, rall, p, bmp, p0, true);
 			}
 		for( x in 1...World.SIZE-1 )
 			for( y in 1...World.SIZE-1 ) {
@@ -91,7 +113,7 @@ class Main implements haxe.Public {
 						w.setPixel32(x * 5 + 4, y * 5 + 4, tiles.getColor(right > k || down > k ? right > down ? tright : tdown : (right < 0 && down < 0 ? tright : t)));
 				}
 			}
-		root.addChild(new flash.display.Bitmap(w));
+		root.addChildAt(new flash.display.Bitmap(w),0);
 	}
 	
 	public static var inst : Main;

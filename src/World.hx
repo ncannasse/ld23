@@ -32,5 +32,9 @@ class World {
 	public inline function get(x, y) {
 		return t[x][y];
 	}
+
+	public function set(x, y, k) {
+		t[x][y] = k;
+	}
 	
 }
