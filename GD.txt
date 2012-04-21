@@ -2,34 +2,17 @@ Tiny World
 ----------
 
 - Small pixel-size world 
-	generated ? -> depends on replayability
 	gfx = 5x5 blocks ?
-
-- Cities
-	each city belong to an Empire
 	
-- Empire
-	have kings / behaviors
-	have allies / ennemies
-	raise armies
-	attack other cities
-	build territory
-
-- Mines
-	appear on the map
-	exploited by empires
-	give ressources
 	
-- Player
-	have a city
-	need to turn it into an empire
-	
-- Monsters
-	wander in the world
-	attack cities
-	might have generators
-	some bosses are powerful
+Monsters waiting in the fog : attack when you visit
+	- Att/Def math puzzle
 
+% Terrain discovered meter
+# Monsters killed "
 
-- 6am40 start
-- 9pm pause
+Complete some missions
+
+Buy items (cities)
+
+-> finish game
