@@ -1,4 +1,5 @@
 import Common;
+import Logic;
 
 @:bitmap("gfx/world.png")
 class WorldBmp extends flash.display.BitmapData {

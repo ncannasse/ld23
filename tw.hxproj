@@ -21,7 +21,7 @@
   <build>
     <option directives="" />
     <option flashStrict="True" />
-    <option mainClass="Main" />
+    <option mainClass="Game" />
     <option enabledebug="False" />
     <option additional="" />
   </build>

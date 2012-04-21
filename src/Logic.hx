@@ -2,17 +2,20 @@ import Common;
 
 class City {
 
+	public var game : Game;
 	public var x : Int;
 	public var y : Int;
 	public var mc : BMP;
 	
-	public function new(x, y) {
+	public function new(g, x, y) {
+		game = g;
 		this.x = x;
 		this.y = y;
-		mc = new flash.display.Bitmap(Main.inst.tiles.t[5][0]);
+		mc = new flash.display.Bitmap(game.tiles.t[5][0]);
 		mc.x = x * 5;
 		mc.y = y * 5;
-		Main.inst.root.addChild(mc);
+		game.root.addChild(mc);
 	}
 	
 }
+

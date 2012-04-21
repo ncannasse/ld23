@@ -3,4 +3,4 @@
 -swf-header 640:680:40:000000
 --flash-strict
 -swf-version 9
--main Main
+-main Game

@@ -30,3 +30,6 @@ Tiny World
 	might have generators
 	some bosses are powerful
 
+
+- 6am40 start
+- 9pm pause

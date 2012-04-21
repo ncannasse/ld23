@@ -1,7 +1,7 @@
 import Common;
 import Logic;
 
-class Main implements haxe.Public {
+class Game implements haxe.Public {
 	
 	var root : SPR;
 	var ui : SPR;
@@ -39,7 +39,8 @@ class Main implements haxe.Public {
 						break;
 				}
 			} while( true );
-			cities.push(new City(x,y));
+			var c = new City(this, x, y);
+			cities.push(c);
 		}
 		drawWorld();
 	}
@@ -116,11 +117,11 @@ class Main implements haxe.Public {
 		root.addChildAt(new flash.display.Bitmap(w),0);
 	}
 	
-	public static var inst : Main;
+	public static var inst : Game;
 	
 	static function main() {
 		haxe.Log.setColor(0xFF0000);
-		inst = new Main(flash.Lib.current);
+		inst = new Game(flash.Lib.current);
 		inst.init();
 	}
 }
