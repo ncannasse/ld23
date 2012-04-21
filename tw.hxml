@@ -1,5 +1,5 @@
 -cp src
--swf9 tw.swf
+-swf tw.swf
 -swf-header 640:680:40:000000
 --flash-strict
 -swf-version 9

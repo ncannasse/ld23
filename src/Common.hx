@@ -9,3 +9,8 @@ enum Block {
 	Sand;
 	Sea;
 }
+
+enum MonsterKind {
+	Walker;
+	Soldier;
+}

@@ -4,21 +4,29 @@ import Common;
 class TilesBmp extends flash.display.BitmapData {
 }
 
+@:bitmap("gfx/sprites.png")
+class SpritesBmp extends flash.display.BitmapData {
+}
+
 class Tiles {
 
 	public var t : Array<Array<flash.display.BitmapData>>;
-	public var colorBG : UInt;
+	public var s : Array<Array<flash.display.BitmapData>>;
 	
 	public function new() {
-		t = [];
-		var tiles = new TilesBmp(0, 0);
-		colorBG = tiles.getPixel32(127, 127);
-		for( y in 0...25 ) {
+		t = initTiles(new TilesBmp(0, 0), 5);
+		s = initTiles(new SpritesBmp(0, 0), 7);
+	}
+	
+	function initTiles( tiles : flash.display.BitmapData, size : Int ) {
+		var colorBG = tiles.getPixel32(tiles.width - 1, tiles.height - 1);
+		var t = [];
+		for( y in 0...Std.int(tiles.width/size) ) {
 			t[y] = [];
-			for( x in 0...25 ) {
-				var b = new flash.display.BitmapData(5, 5, true, 0);
-				b.copyPixels(tiles, new flash.geom.Rectangle(x * 5, y * 5, 5, 5), new flash.geom.Point(0, 0));
-				if( isEmpty(b) ) {
+			for( x in 0...Std.int(tiles.height/size) ) {
+				var b = new flash.display.BitmapData(size, size, true, 0);
+				b.copyPixels(tiles, new flash.geom.Rectangle(x * size, y * size, size, size), new flash.geom.Point(0, 0));
+				if( isEmpty(b,colorBG) ) {
 					b.dispose();
 					break;
 				}
@@ -26,22 +34,22 @@ class Tiles {
 			}
 		}
 		tiles.dispose();
+		return t;
 	}
 	
 	public function getColor( c : Block ) {
 		return t[Type.enumIndex(c)][0].getPixel32(0, 0);
 	}
 	
-	function isEmpty( b : flash.display.BitmapData ) {
+	function isEmpty( b : flash.display.BitmapData, bg : UInt ) {
 		var empty = true;
-		for( x in 0...5 )
-			for( y in 0...5 ) {
+		for( x in 0...b.width )
+			for( y in 0...b.height ) {
 				var color = b.getPixel32(x, y);
-				if( color != colorBG ) {
+				if( color != bg )
 					empty = false;
-					if( Std.int(color) == 0xFFFE00FE )
-						b.setPixel32(x, y, 0);
-				}
+				if( Std.int(color) == 0xFFFE00FE )
+					b.setPixel32(x, y, 0);
 			}
 		return empty;
 	}

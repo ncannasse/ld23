@@ -9,6 +9,7 @@ class Game implements haxe.Public {
 	var tiles : Tiles;
 	var cities : Array<City>;
 	var rnd : Rand;
+	var monsters : Array<Monster>;
 	
 	function new(root) {
 		this.root = root;
@@ -20,29 +21,60 @@ class Game implements haxe.Public {
 		tiles = new Tiles();
 	}
 	
+	function freeSpace() {
+		var x, y;
+		while( true ) {
+			x = rnd.random(World.SIZE);
+			y = rnd.random(World.SIZE);
+			switch( world.get(x,y) )
+			{
+				case Sea, Mountain:
+					continue;
+				default:
+					var found = false;
+					for( c in cities )
+						if( c.x == x && c.y == y ) {
+							found = true;
+							break;
+						}
+					for( m in monsters )
+						if( m.x == x && m.y == y ) {
+							found = true;
+							break;
+						}
+					if( !found )
+						return { x : x, y : y };
+			}
+		}
+		return null;
+	}
+	
+	
 	function init() {
 		cities = [];
+		monsters = [];
 		rnd = new Rand(42);
 		for( i in 0...20 ) {
-			var x, y;
-			do {
-				x = rnd.random(World.SIZE);
-				y = rnd.random(World.SIZE);
-				switch( world.get(x,y) )
-				{
-					case Sea, Mountain:
-						continue;
-					case Forest:
-						world.set(x, y, Field);
-						break;
-					default:
-						break;
-				}
-			} while( true );
-			var c = new City(this, x, y);
+			var p = freeSpace();
+			if( world.get(p.x, p.y) == Forest )
+				world.set(p.x, p.y, Field);
+			var c = new City(this, p.x, p.y);
 			cities.push(c);
 		}
+		for( i in 0...100 ) {
+			var p = freeSpace();
+			var all = Type.allEnums(MonsterKind);
+			var m = new Monster(this, p.x, p.y, all[rnd.random(all.length)]);
+			monsters.push(m);
+		}
 		drawWorld();
+		update();
+		root.addEventListener(flash.events.Event.ENTER_FRAME, function(_) update());
+	}
+	
+	function update() {
+		for( m in monsters )
+			m.update();
 	}
 
 	
