@@ -7,7 +7,7 @@
     <movie path="tw.swf" />
     <movie fps="40" />
     <movie width="640" />
-    <movie height="680" />
+    <movie height="480" />
     <movie version="10" />
     <movie minorVersion="0" />
     <movie platform="Flash Player" />

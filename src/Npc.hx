@@ -8,6 +8,7 @@ class Npc extends Entity {
 	public function new(g, x, y, k) {
 		super(g, x, y, k);
 		waitMove = 0;
+		path = [];
 	}
 	
 	public function chooseTarget() {
@@ -72,8 +73,8 @@ class Npc extends Entity {
 			if( Std.random(100) == 0 )
 				chooseTarget();
 		} else if( !game.collide(p.x,p.y) ) {
-			tx = p.x;
-			ty = p.y;
+			x = p.x;
+			y = p.y;
 		} else {
 			game.world.initPath(x, y);
 			path = game.world.getPath(target.x, target.y);

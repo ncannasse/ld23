@@ -9,6 +9,7 @@ enum Block {
 	Sand;
 	Sea;
 	DarkSea;
+	CityPos;
 }
 
 enum NpcKind {

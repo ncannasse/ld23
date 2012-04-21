@@ -9,6 +9,7 @@ class World {
 	public static inline var SIZE = 128;
 	
 	public var t : Array<Array<Block>>;
+	public var fog : Array<Array<Float>>;
 	
 	var game : Game;
 	var path : flash.Vector<Int>;
@@ -20,10 +21,13 @@ class World {
 		path = new flash.Vector(SIZE * SIZE);
 		tmp = new flash.Vector();
 		t = [];
+		fog = [];
 		var bmp = new WorldBmp(0, 0);
 		for( x in 0...SIZE ) {
 			t[x] = [];
+			fog[x] = [];
 			for( y in 0...SIZE ) {
+				fog[x][y] = 1;
 				t[x][y] = switch( bmp.getPixel(x,y) ) {
 				case 0x0000FE: Sea;
 				case 0x00FE00: Field;
@@ -51,6 +55,25 @@ class World {
 						set(x, y, DarkSea);
 				}
 		bmp.dispose();
+	}
+	
+	public function clearFog( x, y ) {
+		var changed = false;
+		for( dx in -5...6 )
+			for( dy in -5...5 ) {
+				var x = x + dx, y = y + dy;
+				if( x < 0 || y < 0 || x >= SIZE || y >= SIZE || fog[x][y] == 0 ) continue;
+				var r = Math.sqrt(dx * dx + dy * dy);
+				if( r > 5 )
+					continue;
+				var k = 1  - 3 / (r + 1);
+				if( k < 0 ) k = 0;
+				if( fog[x][y] > k ) {
+					fog[x][y] = k;
+					changed = true;
+				}
+			}
+		return changed;
 	}
 	
 	inline function addr(x, y) {
@@ -148,6 +171,11 @@ class World {
 		}
 	}
 	
+	public inline function getTileAt(t:Block, x, y) {
+		var t = game.tiles.t[Type.enumIndex(t)];
+		return t[Rand.hash(x + y * World.SIZE) % t.length];
+	}
+	
 	public function draw( w : flash.display.BitmapData ) {
 		var rall = new flash.geom.Rectangle(0, 0, 5, 5);
 		var p = new flash.geom.Point();
@@ -156,24 +184,19 @@ class World {
 		for( y in 0...World.SIZE )
 			for( x in 0...World.SIZE ) {
 				var t = get(x, y);
-				var dx = 0, dy = 0;
+				p.x = x * 5;
+				p.y = y * 5;
 				switch(t)
 				{
 					case Forest, Mountain:
 						// draw soil
-						var s = game.tiles.t[Type.enumIndex(Field)];
-						p.x = x * 5;
-						p.y = y * 5;
-						w.copyPixels(s[Rand.hash(x + y * World.SIZE) % s.length], rall, p);
+						w.copyPixels(getTileAt(Field,x,y), rall, p);
 						// move tree around
-						dx = rnd.random(3) - 1;
-						dy = rnd.random(4) == 0 ? -1 : 0;
+						p.x += rnd.random(3) - 1;
+						p.y += rnd.random(4) == 0 ? -1 : 0;
 					default:
 				}
-				var t = game.tiles.t[Type.enumIndex(t)];
-				p.x = x * 5 + dx;
-				p.y = y * 5 + dy;
-				var bmp = t[Rand.hash(x + y * World.SIZE) % t.length];
+				var bmp = getTileAt(t,x,y);
 				w.copyPixels(bmp, rall, p, bmp, p0, true);
 			}
 		function set(x, y, t) { var c = game.tiles.getColor(t); if( c > 0 ) w.setPixel32(x, y, c); }

@@ -11,7 +11,7 @@ class City {
 		game = g;
 		this.x = x;
 		this.y = y;
-		mc = new flash.display.Bitmap(game.tiles.t[6][0]);
+		mc = new flash.display.Bitmap(game.world.getTileAt(CityPos,x,y));
 		mc.x = x * 5;
 		mc.y = y * 5;
 		game.dm.add(mc,Game.PLAN_CITY);
@@ -27,8 +27,6 @@ class Entity {
 	public var kind : NpcKind;
 	public var mc : BMP;
 	
-	public var tx : Int;
-	public var ty : Int;
 	public var moving : Bool;
 	
 	public var frame : Float;
@@ -42,8 +40,8 @@ class Entity {
 		game = g;
 		kind = k;
 		mspeed = 0.12;
-		this.x = tx = x;
-		this.y = ty = y;
+		this.x = x;
+		this.y = y;
 		moving = false;
 		px = x;
 		py = y;
@@ -54,31 +52,29 @@ class Entity {
 	}
 	
 	public function canMove() {
-		var d = Math.abs(px - tx) + Math.abs(py - ty);
+		var d = Math.abs(px - x) + Math.abs(py - y);
 		return d <= mspeed;
 	}
 	
 	public function update() {
 		frame += 0.12 * (1 + Math.random() * 0.02);
-		var dx = Math.abs(px - tx);
+		var dx = Math.abs(px - x);
 		if( dx > 0 ) {
 			if( dx > mspeed ) {
 				dx = mspeed;
 				moving = true;
 			} else
 				moving = false;
-			px += px > tx ? -dx : dx;
-			x = Std.int(px);
+			px += px > x ? -dx : dx;
 		}
-		var dy = Math.abs(py - ty);
+		var dy = Math.abs(py - y);
 		if( dy > 0 ) {
 			if( dy > mspeed ) {
 				dy = mspeed;
 				moving = true;
 			} else
 				moving = false;
-			py += py > ty ? -dy : dy;
-			y = Std.int(py);
+			py += py > y ? -dy : dy;
 		}
 		
 		this.mc.x = Std.int(px * 5) - 1;
