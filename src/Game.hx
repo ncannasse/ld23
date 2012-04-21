@@ -19,7 +19,11 @@ class Game implements haxe.Public {
 	var npcs : Array<Npc>;
 	var hero : Hero;
 	var scroll : { x : Float, y : Float, ix : Int, iy : Int };
-	var fog : SPR;
+	var fog : flash.display.BitmapData;
+	var fogMC : BMP;
+	
+	var sizeX : Int;
+	var sizeY : Int;
 	
 	function new(root) {
 		this.root = root;
@@ -28,8 +32,13 @@ class Game implements haxe.Public {
 		root.scaleX = root.scaleY = 4;
 		world = new World(this);
 		tiles = new Tiles();
-		fog = new SPR();
-		dm.add(fog, PLAN_FOG);
+		
+		sizeX = Math.ceil(root.stage.stageWidth / (5 * root.scaleX)) + 1;
+		sizeY = Math.ceil(root.stage.stageHeight / (5 * root.scaleX)) + 1;
+		
+		fog = new flash.display.BitmapData(sizeX * 5, sizeY * 5, true, 0);
+		fogMC = new BMP(fog);
+		dm.add(fogMC, PLAN_FOG);
 	}
 	
 	function freeSpace() {
@@ -101,20 +110,20 @@ class Game implements haxe.Public {
 	}
 	
 	function redrawFog() {
-		var g = fog.graphics;
-		g.clear();
-		var scale = root.stage.scaleX * 5;
-		var sx = Math.ceil(root.stage.stageWidth / scale);
-		var sy = Math.ceil(root.stage.stageHeight / scale);
-		for( x in 0...sx )
-			for( y in 0...sy ) {
-				var x = x + scroll.ix;
-				var y = y + scroll.iy;
-				var f = x < 0 || y < 0 || x >= World.SIZE || y >= World.SIZE ? 1 : world.fog[x][y];
+		fog.fillRect(fog.rect, 0);
+		var r = new flash.geom.Rectangle(0, 0, 5, 5);
+		for( x in 0...sizeX )
+			for( y in 0...sizeY ) {
+				var rx = x + scroll.ix;
+				var ry = y + scroll.iy;
+				var f = rx < 0 || ry < 0 || rx >= World.SIZE || ry >= World.SIZE ? 1 : world.fog[rx][ry];
 				if( f == 0 ) continue;
-				g.beginFill(0, f);
-				g.drawRect(x * 5, y * 5, 5, 5);
+				r.x = x * 5;
+				r.y = y * 5;
+				fog.fillRect(r, Std.int(f * 255) << 24);
 			}
+		fogMC.x = scroll.ix * 5;
+		fogMC.y = scroll.iy * 5;
 	}
 	
 	function update() {
