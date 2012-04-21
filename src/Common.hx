@@ -11,8 +11,9 @@ enum Block {
 	DarkSea;
 }
 
-enum MonsterKind {
+enum NpcKind {
 	Walker;
 	Soldier;
 	WoodCuter;
+	King;
 }

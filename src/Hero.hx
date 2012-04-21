@@ -1,0 +1,3 @@
+class Hero extends Entity {
+	
+}

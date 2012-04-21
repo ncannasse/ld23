@@ -1,6 +1,7 @@
 -cp src
--swf tw.swf
+-cp lib
+-swf9 tw.swf
 -swf-header 640:680:40:000000
 --flash-strict
--swf-version 9
+-swf-version 10
 -main Game
