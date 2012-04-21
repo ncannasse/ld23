@@ -6,9 +6,9 @@ private typedef K = flash.ui.Keyboard;
 class Game implements haxe.Public {
 	
 	static inline var PLAN_WORLD = 0;
-	static inline var PLAN_CITY = 1;
 	static inline var PLAN_NPC = 2;
-	static inline var PLAN_FOG = 3;
+	static inline var PLAN_MONSTER = 3;
+	static inline var PLAN_FOG = 4;
 	
 	var root : SPR;
 	var dm : DepthManager;
@@ -17,6 +17,7 @@ class Game implements haxe.Public {
 	var cities : Array<City>;
 	var rnd : Rand;
 	var npcs : Array<Npc>;
+	var monsters : Array<Monster>;
 	var hero : Hero;
 	var scroll : { x : Float, y : Float, ix : Int, iy : Int };
 	var fog : flash.display.BitmapData;
@@ -29,7 +30,7 @@ class Game implements haxe.Public {
 		this.root = root;
 		dm = new DepthManager(root);
 		root.stage.scaleMode = flash.display.StageScaleMode.NO_SCALE;
-		root.scaleX = root.scaleY = 4;
+		root.scaleX = root.scaleY = 2;
 		world = new World(this);
 		tiles = new Tiles();
 		
@@ -62,6 +63,13 @@ class Game implements haxe.Public {
 							found = true;
 							break;
 						}
+					for( m in monsters )
+						if( m.x == x && m.y == y ) {
+							found = true;
+							break;
+						}
+					if( x == hero.x && y == hero.y )
+						found = true;
 					if( !found )
 						return { x : x, y : y };
 			}
@@ -69,30 +77,56 @@ class Game implements haxe.Public {
 		return null;
 	}
 	
+	function fight( m : Monster ) {
+		m.remove();
+		monsters.remove(m);
+	}
 	
 	function init() {
 		cities = [];
 		npcs = [];
+		monsters = [];
 		rnd = new Rand(42);
-		for( i in 0...20 ) {
-			var p = freeSpace();
-			if( world.get(p.x, p.y) == Forest )
-				world.set(p.x, p.y, Field);
-			var c = new City(this, p.x, p.y);
-			cities.push(c);
+		
+		hero = new Hero(30, 97);
+		
+		for( x in 0...World.SIZE )
+			for( y in 0...World.SIZE )
+				switch( world.get(x,y) ) {
+				case CityPos:
+					var c = new City(this, x, y);
+					cities.push(c);
+				default:
+				}
+
+		var all = Type.allEnums(NpcKind);
+		for( m in world.monsters ) {
+			var m = new Monster(m.x, m.y, all[m.i + Type.enumIndex(Blob)]);
+			monsters.push(m);
 		}
+		
 		for( i in 0...30 ) {
 			var p = freeSpace();
-			var all = Type.allEnums(NpcKind);
-			var n = new Npc(this, p.x, p.y, all[rnd.random(all.length)]);
+			var n = addNPC(p.x, p.y, all[rnd.random(all.length)]);
 			n.mspeed *= Math.random() + 0.5;
-			npcs.push(n);
 		}
-		hero = new Hero(this, 25, 97, Walker);
+
+		var n = addNPC(38, 93, Soldier);
+		n.locked = true;
+		n.onHit = function() {
+			return false;
+		}
+				
 		world.initPath(hero.x, hero.y);
 		drawWorld();
 		update();
 		root.addEventListener(flash.events.Event.ENTER_FRAME, function(_) update());
+	}
+	
+	function addNPC(x, y, k) {
+		var n = new Npc(x, y, k);
+		npcs.push(n);
+		return n;
 	}
 	
 	function collide( x : Int, y : Int ) {
@@ -131,15 +165,6 @@ class Game implements haxe.Public {
 		var tx = hero.px * scale - (root.stage.stageWidth >> 1);
 		var ty = hero.py * scale - (root.stage.stageHeight >> 1);
 		
-		/*
-		if( tx < 0 ) tx = 0;
-		if( ty < 0 ) ty = 0;
-		var xmax = World.SIZE * scale - root.stage.stageWidth;
-		var ymax = World.SIZE * scale - root.stage.stageHeight;
-		if( tx > xmax ) tx = xmax;
-		if( ty > ymax ) ty = ymax;
-		*/
-		
 		if( scroll == null )
 			scroll = { x : tx, y : ty, ix : -1, iy : -1 };
 		else {
@@ -173,6 +198,8 @@ class Game implements haxe.Public {
 		
 		for( n in npcs )
 			n.update();
+		for( m in monsters )
+			m.update();
 			
 		dm.ysort(PLAN_NPC);
 	}

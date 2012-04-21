@@ -4,11 +4,16 @@ class Npc extends Entity {
 	var target : { x : Int, y : Int };
 	var path : Array<{ x : Int, y : Int }>;
 	var waitMove : Float;
+	public var locked : Bool;
 	
-	public function new(g, x, y, k) {
-		super(g, x, y, k);
+	public function new(x, y, k) {
+		super(x, y, k);
 		waitMove = 0;
 		path = [];
+	}
+	
+	public dynamic function onHit() {
+		return false;
 	}
 	
 	public function chooseTarget() {
@@ -82,7 +87,7 @@ class Npc extends Entity {
 	}
 	
 	override public function update() {
-		if( canMove() ) {
+		if( canMove() && !locked ) {
 			waitMove -= mspeed;
 			if( waitMove < 0 ) nextMove();
 		} else

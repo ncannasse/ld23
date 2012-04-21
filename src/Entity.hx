@@ -5,16 +5,11 @@ class City {
 	public var game : Game;
 	public var x : Int;
 	public var y : Int;
-	public var mc : BMP;
 	
 	public function new(g, x, y) {
 		game = g;
 		this.x = x;
 		this.y = y;
-		mc = new flash.display.Bitmap(game.world.getTileAt(CityPos,x,y));
-		mc.x = x * 5;
-		mc.y = y * 5;
-		game.dm.add(mc,Game.PLAN_CITY);
 	}
 	
 }
@@ -36,8 +31,8 @@ class Entity {
 	
 	public var mspeed : Float;
 	
-	public function new(g, x, y, k) {
-		game = g;
+	public function new(x, y, k) {
+		game = Game.inst;
 		kind = k;
 		mspeed = 0.12;
 		this.x = x;
@@ -54,6 +49,10 @@ class Entity {
 	public function canMove() {
 		var d = Math.abs(px - x) + Math.abs(py - y);
 		return d <= mspeed;
+	}
+	
+	public function remove() {
+		mc.parent.removeChild(mc);
 	}
 	
 	public function update() {

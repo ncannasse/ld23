@@ -17,4 +17,6 @@ enum NpcKind {
 	Soldier;
 	WoodCuter;
 	King;
+	Blob;
+	Spider;
 }

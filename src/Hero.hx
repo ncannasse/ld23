@@ -3,8 +3,8 @@ class Hero extends Entity {
 	var cx : Int;
 	var cy : Int;
 	
-	public function new(g, x, y, k) {
-		super(g, x, y, k);
+	public function new(x, y) {
+		super(x, y, Walker);
 		cx = cy = 0;
 	}
 	

@@ -15,6 +15,7 @@ class World {
 	var path : flash.Vector<Int>;
 	var tmp : flash.Vector<Int>;
 	var tmpPos : Int;
+	public var monsters : Array<{ x : Int, y : Int, i : Int }>;
 	
 	public function new(g) {
 		game = g;
@@ -22,19 +23,29 @@ class World {
 		tmp = new flash.Vector();
 		t = [];
 		fog = [];
+		monsters = [];
 		var bmp = new WorldBmp(0, 0);
 		for( x in 0...SIZE ) {
 			t[x] = [];
 			fog[x] = [];
 			for( y in 0...SIZE ) {
 				fog[x][y] = 1;
-				t[x][y] = switch( bmp.getPixel(x,y) ) {
+				var v = bmp.getPixel(x, y);
+				t[x][y] = switch( v ) {
 				case 0x0000FE: Sea;
 				case 0x00FE00: Field;
 				case 0x7F7F7F: Mountain;
 				case 0x007F00: Forest;
 				case 0xFEFE00: Sand;
-				default: trace("Unknown " + StringTools.hex(bmp.getPixel(x, y))); Sea;
+				case 0xFEFEFE: CityPos;
+				default:
+					if( v & 0xFFFF == 0 ) {
+						monsters.push( { x : x, y : y, i : 0xFE - (v >> 16) } );
+						t[x][y - 1];
+					} else {
+						trace("Unknown " + StringTools.hex(bmp.getPixel(x, y)));
+						Sea;
+					}
 				}
 			}
 		}
@@ -45,11 +56,10 @@ class World {
 					for( dx in -2...3 )
 						for( dy in -2...3 )
 							if( x + dx >= 0 && y + dy >= 0 && x + dx < SIZE && y + dy < SIZE )
-								switch(t[x+dx][y+dy])
-								{
-									case Sea,DarkSea:
-									default:
-										found = true;
+								switch(t[x+dx][y+dy]) {
+								case Sea,DarkSea:
+								default:
+									found = true;
 								}
 					if( !found )
 						set(x, y, DarkSea);
@@ -189,11 +199,13 @@ class World {
 				switch(t)
 				{
 					case Forest, Mountain:
-						// draw soil
+						// draw soil under
 						w.copyPixels(getTileAt(Field,x,y), rall, p);
-						// move tree around
+						// move it around
 						p.x += rnd.random(3) - 1;
 						p.y += rnd.random(4) == 0 ? -1 : 0;
+					case CityPos:
+						w.copyPixels(getTileAt(get(x,y-1),x,y), rall, p);
 					default:
 				}
 				var bmp = getTileAt(t,x,y);
