@@ -11,6 +11,7 @@ class Main {
 	function new(root) {
 		this.root = root;
 		root.y = 20;
+		root.scaleX = root.scaleY = 2;
 		world = new World();
 		tiles = new Tiles();
 		drawWorld();
@@ -42,6 +43,41 @@ class Main {
 				p.x = x * 5;
 				p.y = y * 5;
 				w.copyPixels(t[hash(x + y * World.SIZE) % t.length], rall, p);
+			}
+		for( x in 1...World.SIZE-1 )
+			for( y in 1...World.SIZE-1 ) {
+				var tleft = world.t[x - 1][y];
+				var tright = world.t[x + 1][y];
+				var tup = world.t[x][y-1];
+				var tdown = world.t[x][y + 1];
+				switch( world.t[x][y] ) {
+				case Sea:
+					var left = tleft != Sea;
+					var right = tright != Sea;
+					var up = tup != Sea;
+					var down = tdown != Sea;
+					if( left && up )
+						w.setPixel32(x * 5, y * 5, tiles.getColor(tleft));
+					if( right && up )
+						w.setPixel32(x * 5 + 4, y * 5, tiles.getColor(tright));
+					if( left && down )
+						w.setPixel32(x * 5, y * 5 + 4, tiles.getColor(tleft));
+					if( right && down )
+						w.setPixel32(x * 5 + 4, y * 5 + 4, tiles.getColor(tright));
+				default:
+					var left = tleft == Sea;
+					var right = tright == Sea;
+					var up = tup == Sea;
+					var down = tdown == Sea;
+					if( left && up )
+						w.setPixel32(x * 5, y * 5, tiles.getColor(Sea));
+					if( right && up )
+						w.setPixel32(x * 5 + 4, y * 5, tiles.getColor(Sea));
+					if( left && down )
+						w.setPixel32(x * 5, y * 5 + 4, tiles.getColor(Sea));
+					if( right && down )
+						w.setPixel32(x * 5 + 4, y * 5 + 4, tiles.getColor(Sea));
+				}
 			}
 		root.addChild(new flash.display.Bitmap(w));
 	}

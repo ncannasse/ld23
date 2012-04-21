@@ -5,8 +5,7 @@ class TilesBmp extends flash.display.BitmapData {
 class Tiles {
 
 	public var t : Array<Array<flash.display.BitmapData>>;
-	
-	var colorBG : UInt;
+	public var colorBG : UInt;
 	
 	public function new() {
 		t = [];
@@ -25,6 +24,10 @@ class Tiles {
 			}
 		}
 		tiles.dispose();
+	}
+	
+	public function getColor( c : World.Block ) {
+		return t[Type.enumIndex(c)][0].getPixel32(0, 0);
 	}
 	
 	function isEmpty( b : flash.display.BitmapData ) {
