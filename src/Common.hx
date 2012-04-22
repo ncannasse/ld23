@@ -12,6 +12,12 @@ enum Block {
 	DarkSea;
 	CityPos;
 	Cave;
+	SwampForest;
+	Swamp;
+	SnowMountain;
+	DarkField;
+	DarkMountain;
+	DarkForest;
 }
 
 enum NpcKind {
@@ -24,4 +30,12 @@ enum NpcKind {
 	Twinkle;
 	GreenOrc;
 	Skeleton;
+	Shadow;
+	Treasure;
+}
+
+enum Item {
+	KingLetter;
+	Torch;
+	LightSaber;
 }

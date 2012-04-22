@@ -16,7 +16,7 @@ class Npc extends Entity {
 		var rtexts = [
 			"Elfs love cabbage.\nA lot !",
 		];
-		game.message(rtexts[Rand.hash(id) % rtexts.length]);
+		game.message(rtexts[Rand.hash(id) % rtexts.length]+Std.string(target));
 		return true;
 	}
 	

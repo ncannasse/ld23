@@ -30,7 +30,9 @@ class World {
 		function bestSoil(x, y) {
 			var s = get(x, y - 1);
 			return switch( s ) {
-			case Field, Sand: s;
+			case Field, Sand, DarkField, Swamp: s;
+			case DarkForest, DarkMountain: DarkField;
+			case SwampForest: Swamp;
 			default: Field;
 			}
 		}
@@ -45,9 +47,15 @@ class World {
 				case 0x00FE00: Field;
 				case 0x7F7F7F: Mountain;
 				case 0x007F00: Forest;
+				case 0x004B00: SwampForest;
 				case 0xFEFE00: Sand;
 				case 0xFEFEFE: CityPos;
-				case 0x00000:  Cave;
+				case 0x000000: Cave;
+				case 0x82D183: Swamp;
+				case 0xB1B1B1: SnowMountain;
+				case 0xBDFE00: DarkField;
+				case 0x606060: DarkMountain;
+				case 0x418900: DarkForest;
 				case 0xFC8E4C:
 					treasures.push( { x:x, y:y, g : 10, twink : null } );
 					bestSoil(x, y);
@@ -115,12 +123,14 @@ class World {
 		for( x in 0...SIZE )
 			for( y in 0...SIZE )
 				switch( t[x][y] ) {
-				case Sea, DarkSea, Mountain:
+				case Sea, DarkSea, Mountain, DarkMountain, Cave, SnowMountain:
 					path[addr(x, y)] = -1;
 				default:
 				}
 		for( n in game.npcs )
 			path[addr(n.x, n.y)] = -1;
+		for( m in game.monsters )
+			path[addr(m.x, m.y)] = -1;
 		// free out pos
 		path[addr(x, y)] = 0;
 		// start recursion
@@ -194,7 +204,8 @@ class World {
 		return switch(k) {
 			case Sea: -1;
 			case Sand: 1;
-			default: 2;
+			case DarkForest, Swamp: 2;
+			default: 3;
 		}
 	}
 	
@@ -215,9 +226,19 @@ class World {
 				p.y = y * 5;
 				switch(t)
 				{
-					case Forest, Mountain:
+					case Forest, Mountain, SnowMountain:
 						// draw soil under
 						w.copyPixels(getTileAt(Field,x,y), rall, p);
+						// move it around
+						p.x += rnd.random(3) - 1;
+						p.y += rnd.random(4) == 0 ? -1 : 0;
+					case SwampForest:
+						w.copyPixels(getTileAt(Swamp,x,y), rall, p);
+						// move it around
+						p.x += rnd.random(3) - 1;
+						p.y += rnd.random(4) == 0 ? -1 : 0;
+					case DarkMountain, DarkForest:
+						w.copyPixels(getTileAt(DarkField,x,y), rall, p);
 						// move it around
 						p.x += rnd.random(3) - 1;
 						p.y += rnd.random(4) == 0 ? -1 : 0;

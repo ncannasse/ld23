@@ -50,6 +50,7 @@ class Monster extends Entity {
 			case Spider: { name : "Spider", life : 20, att : 20, def : 10, gold : 10 };
 			case GreenOrc: { name : "Green Orc", life : 20, att : 15, def : 5, gold : 5 };
 			case Skeleton: { name : "Skeleton", life : 30, att : 20, def : 10, gold : 4 };
+			case Shadow: { name : "Shadow", life : 10, att : 30, def : game.hero.hasItem(LightSaber) ? 99 : 15, gold : 10 };
 			default: { name : "???", life : 1, att : 0, def : 0, gold : 0 };
 		};
 	}

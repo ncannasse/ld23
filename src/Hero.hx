@@ -1,3 +1,5 @@
+import Common;
+
 class Hero extends Entity {
 	
 	var cx : Int;
@@ -10,9 +12,11 @@ class Hero extends Entity {
 	public var maxLife : Int;
 	var flags : IntHash<Bool>;
 	public var wait : Float;
+	public var items : Array<Item>;
 	
 	public function new(x, y) {
 		super(x, y, Walker);
+		items = [];
 		flags = new IntHash();
 		cx = cy = 0;
 		wait = 0;
@@ -23,10 +27,14 @@ class Hero extends Entity {
 		return flags.exists(game.world.addr(p.x, p.y));
 	}
 	
-	public function hasTorch() {
-		return hasFlag( { x : 0, y : 0 } );
+	public function addItem(i) {
+		items.push(i);
 	}
-
+	
+	public function hasItem(i) {
+		return Lambda.has(items, i);
+	}
+	
 	public function setFlag(p) {
 		flags.set(game.world.addr(p.x, p.y), true);
 	}
