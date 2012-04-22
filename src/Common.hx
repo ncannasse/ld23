@@ -11,6 +11,7 @@ enum Block {
 	Sea;
 	DarkSea;
 	CityPos;
+	Cave;
 }
 
 enum NpcKind {
@@ -20,4 +21,7 @@ enum NpcKind {
 	King;
 	Blob;
 	Spider;
+	Twinkle;
+	GreenOrc;
+	Skeleton;
 }

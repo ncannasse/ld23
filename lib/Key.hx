@@ -44,6 +44,10 @@ class Key {
 	public static function isToggled(c) {
 		return kcodes[c] == ktime;
 	}
+	
+	public static function stopAll() {
+		kcodes = [];
+	}
 
 	public static function enableJSKeys(objName:String) {
 		try {

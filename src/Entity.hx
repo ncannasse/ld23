@@ -23,7 +23,8 @@ class Entity {
 	public var x : Int;
 	public var y : Int;
 	public var kind : NpcKind;
-	public var mc : BMP;
+	public var mc : SPR;
+	public var bmp : BMP;
 	
 	public var moving : Bool;
 	
@@ -32,19 +33,23 @@ class Entity {
 	public var px : Float;
 	public var py : Float;
 	
+	public var aspeed : Float;
 	public var mspeed : Float;
 	
 	public function new(x, y, k) {
 		id = ID++;
 		game = Game.inst;
 		kind = k;
+		aspeed = 1;
 		mspeed = 0.12;
 		this.x = x;
 		this.y = y;
 		moving = false;
 		px = x;
 		py = y;
-		this.mc = new BMP(null,flash.display.PixelSnapping.ALWAYS);
+		this.bmp = new BMP(null, flash.display.PixelSnapping.ALWAYS);
+		this.mc = new SPR();
+		mc.addChild(bmp);
 		game.dm.add(mc,Game.PLAN_NPC);
 		frame = Math.random() * 10;
 		curFrame = -1;
@@ -55,12 +60,16 @@ class Entity {
 		return d <= mspeed;
 	}
 	
+	public function alive() {
+		return mc.parent != null;
+	}
+	
 	public function remove() {
 		mc.parent.removeChild(mc);
 	}
 	
 	public function update() {
-		frame += 0.12 * (1 + Math.random() * 0.02);
+		frame += 0.12 * (1 + Math.random() * 0.02) * aspeed;
 		var dx = Math.abs(px - x);
 		if( dx > 0 ) {
 			if( dx > mspeed ) {
@@ -86,7 +95,7 @@ class Entity {
 		var iframe = Std.int(frame) % t.length;
 		if( iframe != curFrame ) {
 			curFrame = iframe;
-			mc.bitmapData = t[iframe];
+			bmp.bitmapData = t[iframe];
 		}
 	}
 	

@@ -16,6 +16,7 @@ class World {
 	var tmp : flash.Vector<Int>;
 	var tmpPos : Int;
 	public var monsters : Array<{ x : Int, y : Int, i : Int }>;
+	public var treasures : Array<{ x : Int, y : Int, g : Int, twink : Sprite }>;
 	
 	public function new(g) {
 		game = g;
@@ -24,7 +25,15 @@ class World {
 		t = [];
 		fog = [];
 		monsters = [];
+		treasures = [];
 		var bmp = new WorldBmp(0, 0);
+		function bestSoil(x, y) {
+			var s = get(x, y - 1);
+			return switch( s ) {
+			case Field, Sand: s;
+			default: Field;
+			}
+		}
 		for( x in 0...SIZE ) {
 			t[x] = [];
 			fog[x] = [];
@@ -38,11 +47,19 @@ class World {
 				case 0x007F00: Forest;
 				case 0xFEFE00: Sand;
 				case 0xFEFEFE: CityPos;
+				case 0x00000:  Cave;
+				case 0xFC8E4C:
+					treasures.push( { x:x, y:y, g : 10, twink : null } );
+					bestSoil(x, y);
+				case 0xFB8B02:
+					treasures.push( { x:x, y:y, g : 20, twink : null } );
+					bestSoil(x, y);
 				default:
 					if( v & 0xFFFF == 0 ) {
 						monsters.push( { x : x, y : y, i : 0xFE - (v >> 16) } );
-						t[x][y - 1];
+						bestSoil(x, y);
 					} else {
+						trace("");
 						trace("Unknown " + StringTools.hex(bmp.getPixel(x, y)));
 						Sea;
 					}
