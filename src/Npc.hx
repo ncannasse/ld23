@@ -13,7 +13,11 @@ class Npc extends Entity {
 	}
 	
 	public dynamic function onHit() {
-		return false;
+		var rtexts = [
+			"Elfs love cabbage.\nA lot !",
+		];
+		game.message(rtexts[Rand.hash(id) % rtexts.length]);
+		return true;
 	}
 	
 	public function chooseTarget() {

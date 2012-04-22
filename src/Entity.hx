@@ -15,6 +15,9 @@ class City {
 }
 
 class Entity {
+
+	static var ID = 0;
+	public var id : Int;
 	
 	public var game : Game;
 	public var x : Int;
@@ -32,6 +35,7 @@ class Entity {
 	public var mspeed : Float;
 	
 	public function new(x, y, k) {
+		id = ID++;
 		game = Game.inst;
 		kind = k;
 		mspeed = 0.12;

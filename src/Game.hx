@@ -22,6 +22,10 @@ class Game implements haxe.Public {
 	var scroll : { x : Float, y : Float, ix : Int, iy : Int };
 	var fog : flash.display.BitmapData;
 	var fogMC : BMP;
+	var messageMC : SPR;
+	var messageText : TF;
+	var messageAsk : { text : String, cur : Bool, callb : Bool -> Void };
+	var curCity : City;
 	
 	var sizeX : Int;
 	var sizeY : Int;
@@ -37,9 +41,98 @@ class Game implements haxe.Public {
 		sizeX = Math.ceil(root.stage.stageWidth / (5 * root.scaleX)) + 1;
 		sizeY = Math.ceil(root.stage.stageHeight / (5 * root.scaleX)) + 1;
 		
+		initMessage();
+		message("Move with arrows/WASD !\nBeware of monsters !\n(Click me or space to start)");
+
+		
 		fog = new flash.display.BitmapData(sizeX * 5, sizeY * 5, true, 0);
 		fogMC = new BMP(fog);
 		dm.add(fogMC, PLAN_FOG);
+	}
+	
+	function message( str ) {
+		messageAsk = null;
+		messageMC.visible = true;
+		messageText.text = str;
+		messageText.y = Std.int(((150 - 6) -  messageText.textHeight) * 0.5);
+	}
+	
+	function initMessage() {
+		var mc = messageMC = new SPR();
+		var tf = messageText = newText();
+		var w = 400, h = 150;
+		
+		mc.addChild(tf);
+		mc.graphics.lineStyle(2, 0);
+		mc.graphics.drawRect(0, 0, w, h);
+		mc.graphics.beginFill(0x000020, 0.9);
+		mc.graphics.lineStyle(2, 0xFFFFFF);
+		mc.graphics.drawRect(2, 2, w - 4, h - 4);
+				
+		tf.x = tf.y = 6;
+		tf.width = w - 12;
+		tf.height = h - 12;
+		var fmt = tf.defaultTextFormat;
+		fmt.align = flash.text.TextFormatAlign.CENTER;
+		fmt.size = 18;
+		tf.defaultTextFormat = fmt;
+		
+		mc.visible = false;
+		mc.addEventListener(flash.events.MouseEvent.CLICK, function(_) hideMessage());
+		mc.useHandCursor = true;
+		mc.buttonMode = true;
+		
+		mc.x = (root.stage.stageWidth - w) >> 1;
+		mc.y = (root.stage.stageHeight - h) >> 1;
+		root.parent.addChild(mc);
+	}
+	
+	function hideMessage() {
+		messageMC.visible = false;
+		var ma = messageAsk;
+		if( ma != null ) {
+			messageAsk = null;
+			ma.callb(ma.cur);
+		}
+	}
+	
+	function newText() {
+		var tf = new TF();
+		tf.selectable = false;
+		tf.mouseEnabled = false;
+		tf.textColor = 0xFFFFFF;
+		tf.filters = [new flash.filters.GlowFilter(0, 0.8, 2, 2, 10, 2)];
+		return tf;
+	}
+	
+	function ask( msg, callb ) {
+		messageAsk = { text : msg, cur : true, callb : callb };
+		updateAsk();
+	}
+	
+	function askBuy( pos, msg, amount,callb ) {
+		if( hero.bought.exists(pos) )
+			message("You already bought item here");
+		else
+			ask(msg,function(b) {
+				if( b ) buy(amount, function() {
+					callb();
+					hero.bought.set(pos,true);
+				});
+			});
+	}
+	
+	function updateAsk() {
+		var ma = messageAsk;
+		message(ma.text + "\n\n" + (ma.cur?"[Yes]\t\t\t No ":" Yes \t\t\t[No]"));
+		messageAsk = ma;
+	}
+	
+	function buy(amount,callb) {
+		if( hero.gold < amount )
+			message("You don't have enough gold !");
+		else
+			callb();
 	}
 	
 	function freeSpace() {
@@ -114,7 +207,8 @@ class Game implements haxe.Public {
 		var n = addNPC(38, 93, Soldier);
 		n.locked = true;
 		n.onHit = function() {
-			return false;
+			message("It's dangerous to go up there,\nyou will need a better weapon !");
+			return true;
 		}
 				
 		world.initPath(hero.x, hero.y);
@@ -129,7 +223,7 @@ class Game implements haxe.Public {
 		return n;
 	}
 	
-	function collide( x : Int, y : Int ) {
+	function collide( x : Int, y : Int, isHero = false ) {
 		switch( world.get(x,y) )  {
 		case Sea, DarkSea, Mountain:
 			return true;
@@ -137,7 +231,7 @@ class Game implements haxe.Public {
 		}
 		for( n in npcs )
 			if( n.x == x && n.y == y )
-				return true;
+				return !isHero || n.onHit();
 		if( x == hero.x && y == hero.y )
 			return true;
 		return false;
@@ -183,16 +277,51 @@ class Game implements haxe.Public {
 		}
 		
 		if( hero.canMove() ) {
-			if( (Key.isDown(K.LEFT) || Key.isDown("A".code) || Key.isDown("Q".code)) && !collide(hero.x-1,hero.y) )
-				hero.x--;
-			else if( (Key.isDown(K.RIGHT) || Key.isDown("D".code)) && !collide(hero.x + 1, hero.y) )
-				hero.x++;
-			else if( (Key.isDown(K.UP) || Key.isDown("Z".code) || Key.isDown("W".code)) && !collide(hero.x,hero.y - 1) )
-				hero.y--;
-			else if( (Key.isDown(K.DOWN) || Key.isDown("S".code)) && !collide(hero.x, hero.y + 1) )
-				hero.y++;
-			else
+			if( messageMC.visible ) {
+				// prevent move
 				hero.frame = 0;
+				var move = false;
+				for( k in [K.LEFT, K.RIGHT, K.UP, K.DOWN, "A".code, "Q".code, "D".code, "Z".code, "W".code, "S".code] )
+					if( Key.isToggled(k) ) {
+						move = true;
+						break;
+					}
+				if( messageAsk != null ) {
+					if( move ) {
+						messageAsk.cur = !messageAsk.cur;
+						updateAsk();
+					} else if( Key.isToggled(K.SPACE) )
+						hideMessage();
+				} else if( Key.isToggled(K.SPACE) || move )
+					hideMessage();
+				
+			} else if( (Key.isDown(K.LEFT) || Key.isDown("A".code) || Key.isDown("Q".code)) && !collide(hero.x-1,hero.y,true) )
+				hero.x--;
+			else if( (Key.isDown(K.RIGHT) || Key.isDown("D".code)) && !collide(hero.x + 1, hero.y,true) )
+				hero.x++;
+			else if( (Key.isDown(K.UP) || Key.isDown("Z".code) || Key.isDown("W".code)) && !collide(hero.x,hero.y - 1,true) )
+				hero.y--;
+			else if( (Key.isDown(K.DOWN) || Key.isDown("S".code)) && !collide(hero.x, hero.y + 1,true) )
+				hero.y++;
+			else {
+				var found = false;
+				for( c in cities )
+					if( c.x == hero.x && c.y == hero.y ) {
+						found = true;
+						if( curCity == c ) break;
+						curCity = c;
+						var pos = world.addr(c.x, c.y);
+						switch( pos ) {
+						case 12193:
+							askBuy(pos, "Buy a dagger (+5 Att) for 10 gold ?", 10, function() { hero.attack += 5; message("You attack has raised to " + hero.attack); } );
+						default:
+							trace("Unknown city @" + world.addr(c.x, c.y));
+						}
+					}
+				if( !found )
+					curCity = null;
+				hero.frame = 0;
+			}
 		}
 		hero.update();
 		

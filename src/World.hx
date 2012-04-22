@@ -86,7 +86,7 @@ class World {
 		return changed;
 	}
 	
-	inline function addr(x, y) {
+	public inline function addr(x, y) {
 		return x | (y << 7);
 	}
 	

@@ -1,6 +1,7 @@
 
 typedef SPR = flash.display.Sprite;
 typedef BMP = flash.display.Bitmap;
+typedef TF = flash.text.TextField;
 
 enum Block {
 	Field;

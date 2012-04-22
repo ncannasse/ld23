@@ -3,9 +3,18 @@ class Hero extends Entity {
 	var cx : Int;
 	var cy : Int;
 	
+	public var attack : Int;
+	public var defense : Int;
+	public var gold : Int;
+	public var bought : IntHash<Bool>;
+	
 	public function new(x, y) {
 		super(x, y, Walker);
+		bought = new IntHash();
 		cx = cy = 0;
+		attack = 10;
+		defense = 5;
+		gold = 10;
 	}
 	
 	override function update() {
