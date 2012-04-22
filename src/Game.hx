@@ -3,12 +3,20 @@ import Entity;
 
 private typedef K = flash.ui.Keyboard;
 
+typedef Icon = {
+	var tf : TF;
+	var ico : BMP;
+}
+
 class Game implements haxe.Public {
 	
 	static inline var PLAN_WORLD = 0;
 	static inline var PLAN_NPC = 2;
 	static inline var PLAN_MONSTER = 3;
 	static inline var PLAN_FOG = 4;
+	
+	static var WIDTH = 640;
+	static var HEIGHT = 480;
 	
 	var root : SPR;
 	var dm : DepthManager;
@@ -27,6 +35,20 @@ class Game implements haxe.Public {
 	var messageAsk : { text : String, cur : Bool, callb : Bool -> Void };
 	var curCity : City;
 	
+	var discover : Int;
+	var monstersKilled : Int;
+	
+	var helpText : TF;
+	
+	var ui : {
+		life : Icon,
+		discover : TF,
+		monsters : TF,
+		att : Icon,
+		def : Icon,
+		gold : Icon,
+	};
+	
 	var sizeX : Int;
 	var sizeY : Int;
 	
@@ -38,16 +60,24 @@ class Game implements haxe.Public {
 		world = new World(this);
 		tiles = new Tiles();
 		
-		sizeX = Math.ceil(root.stage.stageWidth / (5 * root.scaleX)) + 1;
-		sizeY = Math.ceil(root.stage.stageHeight / (5 * root.scaleX)) + 1;
+		sizeX = Math.ceil(WIDTH / (5 * root.scaleX)) + 1;
+		sizeY = Math.ceil(HEIGHT / (5 * root.scaleX)) + 1;
 		
 		initMessage();
+		initUI();
 		message("Move with arrows/WASD !\nBeware of monsters !\n(Click me or space to start)");
-
+		
+		helpText = newText();
+		helpText.x = 5;
+		helpText.width = 800;
+		helpText.y = 20;
+		helpText.visible = false;
+		
+		root.parent.addChild(helpText);
 		
 		fog = new flash.display.BitmapData(sizeX * 5, sizeY * 5, true, 0);
 		fogMC = new BMP(fog);
-		dm.add(fogMC, PLAN_FOG);
+		//dm.add(fogMC, PLAN_FOG);
 	}
 	
 	function message( str ) {
@@ -82,9 +112,60 @@ class Game implements haxe.Public {
 		mc.useHandCursor = true;
 		mc.buttonMode = true;
 		
-		mc.x = (root.stage.stageWidth - w) >> 1;
-		mc.y = (root.stage.stageHeight - h) >> 1;
+		mc.x = (WIDTH - w) >> 1;
+		mc.y = (HEIGHT - h) >> 1;
 		root.parent.addChild(mc);
+	}
+	
+	function initUI() {
+		var uis = new SPR();
+		
+		uis.graphics.beginFill(0,0.7);
+		uis.graphics.drawRect(0, 0, WIDTH, 20);
+		root.parent.addChild(uis);
+		
+		var att = new BMP(tiles.i[0][0]);
+		
+		function addIcon(x, i, txt) {
+			var i = {
+				tf : newText(true),
+				ico : new BMP(tiles.i[0][i]),
+			};
+			var spr = new SPR();
+			spr.x = x;
+			uis.addChild(spr);
+			
+			spr.addEventListener(flash.events.MouseEvent.MOUSE_OVER, function(_) help(txt));
+			spr.addEventListener(flash.events.MouseEvent.MOUSE_OUT, function(_) help());
+			
+			spr.addChild(i.tf);
+			spr.addChild(i.ico);
+			i.tf.width = 70;
+			i.tf.text = "999";
+			i.ico.y = 2;
+			i.ico.scaleX = i.ico.scaleY = 2;
+			i.tf.x = 18;
+			return i;
+		}
+		
+		this.ui = {
+			att : addIcon(5, 0,"Attack Power"),
+			def : addIcon(45, 1,"Defense Power"),
+			life : addIcon(85, 4,"Life points"),
+			gold : addIcon(150, 3,"Gold Coins"),
+			discover : newText(),
+			monsters : newText(),
+		};
+		
+	}
+	
+	function help( ?str ) {
+		if( str == null )
+			helpText.visible = false;
+		else {
+			helpText.text = str;
+			helpText.visible = true;
+		}
 	}
 	
 	function hideMessage() {
@@ -96,9 +177,14 @@ class Game implements haxe.Public {
 		}
 	}
 	
-	function newText() {
+	function newText(?auto) {
 		var tf = new TF();
 		tf.selectable = false;
+		if( auto ) {
+			tf.width = 0;
+			tf.autoSize = flash.text.TextFieldAutoSize.LEFT;
+		}
+		tf.height = 20;
 		tf.mouseEnabled = false;
 		tf.textColor = 0xFFFFFF;
 		tf.filters = [new flash.filters.GlowFilter(0, 0.8, 2, 2, 10, 2)];
@@ -256,8 +342,13 @@ class Game implements haxe.Public {
 	
 	function update() {
 		var scale = 5 * root.scaleX;
-		var tx = hero.px * scale - (root.stage.stageWidth >> 1);
-		var ty = hero.py * scale - (root.stage.stageHeight >> 1);
+		var tx = hero.px * scale - (WIDTH >> 1);
+		var ty = hero.py * scale - (HEIGHT >> 1);
+		
+		ui.att.tf.text = Std.string(hero.attack);
+		ui.def.tf.text = Std.string(hero.defense);
+		ui.gold.tf.text = Std.string(hero.gold);
+		ui.life.tf.text = hero.life+"/"+hero.maxLife;
 		
 		if( scroll == null )
 			scroll = { x : tx, y : ty, ix : -1, iy : -1 };
@@ -286,15 +377,21 @@ class Game implements haxe.Public {
 						move = true;
 						break;
 					}
+				var action = false;
+				for( k in [K.SPACE, K.ENTER, "E".code] )
+					if( Key.isToggled(k) ) {
+						action = true;
+						break;
+					}
+				
 				if( messageAsk != null ) {
 					if( move ) {
 						messageAsk.cur = !messageAsk.cur;
 						updateAsk();
-					} else if( Key.isToggled(K.SPACE) )
+					} else if( action )
 						hideMessage();
-				} else if( Key.isToggled(K.SPACE) || move )
+				} else if( action || move )
 					hideMessage();
-				
 			} else if( (Key.isDown(K.LEFT) || Key.isDown("A".code) || Key.isDown("Q".code)) && !collide(hero.x-1,hero.y,true) )
 				hero.x--;
 			else if( (Key.isDown(K.RIGHT) || Key.isDown("D".code)) && !collide(hero.x + 1, hero.y,true) )

@@ -8,14 +8,20 @@ class TilesBmp extends flash.display.BitmapData {
 class SpritesBmp extends flash.display.BitmapData {
 }
 
+@:bitmap("gfx/icons.png")
+class IconsBmp extends flash.display.BitmapData {
+}
+
 class Tiles {
 
 	public var t : Array<Array<flash.display.BitmapData>>;
 	public var s : Array<Array<flash.display.BitmapData>>;
+	public var i : Array<Array<flash.display.BitmapData>>;
 	
 	public function new() {
 		t = initTiles(new TilesBmp(0, 0), 5);
 		s = initTiles(new SpritesBmp(0, 0), 7);
+		i = initTiles(new IconsBmp(0, 0), 8);
 	}
 	
 	function initTiles( tiles : flash.display.BitmapData, size : Int ) {
