@@ -19,12 +19,19 @@ class Game implements haxe.Public {
 	static var WIDTH = 640;
 	static var HEIGHT = 480;
 	
-	static var SINDEX = 3;
+	static var DEBUG = false;
+	
+	static var SINDEX = DEBUG ? 8 : 0;
 	static var START = [
-		{ x : 30, y : 97, att : 10, def : 5, gold : 0, life : 100 },
-		{ x : 47, y : 88, att : 15, def : 15, gold : 5, life : 35 },
-		{ x : 38, y : 92, att : 15, def : 15, gold : 5, life : 35 },
-		{ x : 50, y : 48, att : 15, def : 15, gold : 5, life : 35 },
+		{ x : 30, y : 97, att : 10, def : 5, gold : 0, life : 100, items : [] },
+		{ x : 47, y : 88, att : 15, def : 15, gold : 5, life : 35, items : [] }, // 1 spider reste
+		{ x : 56, y : 60, att : 15, def : 15, gold : 1, life : 30, items : [Blessing, Magic] },
+		{ x : 72, y : 79, att : 15, def : 20, gold : 30, life : 80, items : [Blessing, Magic] },
+		{ x : 26, y : 80, att : 15, def : 20, gold : 42, life : 45, items : [Blessing, Magic, Torch] },
+		{ x : 83, y : 41, att : 25, def : 20, gold : 0, life : 35, items : [Blessing, Magic, Torch] },
+		{ x : 105, y : 54, att : 25, def : 20, gold : 15, life : 150, items : [Blessing, Magic, Torch] },
+		{ x : 80, y : 24, att : 30, def : 25, gold : 5, life : 75, items : [Blessing, Magic, Torch] },
+		{ x : 39, y : 24, att : 30, def : 30, gold : 0, life : 150, items : [Blessing, Magic, Torch] },
 	];
 	
 	var root : SPR;
@@ -43,7 +50,6 @@ class Game implements haxe.Public {
 	var messageText : TF;
 	var messageAsk : { text : String, cur : Bool, callb : Bool -> Void };
 	var curCity : City;
-	var sprites : Array<Sprite>;
 	var worldBmp : flash.display.BitmapData;
 	var lifes : Array<{ l : BMP, t : Float }>;
 	
@@ -94,7 +100,7 @@ class Game implements haxe.Public {
 		
 		fog = new flash.display.BitmapData(sizeX * 5, sizeY * 5, true, 0);
 		fogMC = new BMP(fog);
-		//dm.add(fogMC, PLAN_FOG);
+		dm.add(fogMC, PLAN_FOG);
 	}
 	
 	function message( str ) {
@@ -229,7 +235,8 @@ class Game implements haxe.Public {
 	
 	function updateAsk() {
 		var ma = messageAsk;
-		message(ma.text + "\n\n" + (ma.cur?"[Yes]\t\t\t No ":" Yes \t\t\t[No]"));
+		var lines = ma.text.split("\n").length;
+		message(ma.text + (lines >= 4 ? "\n" : "\n\n") + (ma.cur?"[Yes]\t\t\t No ":" Yes \t\t\t[No]"));
 		messageAsk = ma;
 	}
 	
@@ -247,32 +254,8 @@ class Game implements haxe.Public {
 		while( true ) {
 			x = rnd.random(World.SIZE);
 			y = rnd.random(World.SIZE);
-			switch( world.get(x,y) )
-			{
-				case DarkSea, Sea, Mountain:
-					continue;
-				default:
-					var found = false;
-					for( c in cities )
-						if( c.x == x && c.y == y ) {
-							found = true;
-							break;
-						}
-					for( n in npcs )
-						if( n.x == x && n.y == y ) {
-							found = true;
-							break;
-						}
-					for( m in monsters )
-						if( m.x == x && m.y == y ) {
-							found = true;
-							break;
-						}
-					if( x == hero.x && y == hero.y )
-						found = true;
-					if( !found )
-						return { x : x, y : y };
-			}
+			if( !collide(x, y) )
+				return { x : x, y : y };
 		}
 		return null;
 	}
@@ -294,6 +277,20 @@ class Game implements haxe.Public {
 			mo.remove();
 			monsters.remove(mo);
 			hero.gold += m.gold;
+			if( mo.kind == Dragon && hero.life > 0 ) {
+				var pts = hero.life * 2 + hero.gold;
+				function loop() {
+					ask("Come on !\nI'm sure you can do better than " + pts + " points !", function(b) {
+						if( !b ) loop() else haxe.Timer.delay(gameOver, 1);
+					});
+				}
+				ask("Congratulation !\nYou killed the villain bad evil Dragon !\nYour score is " + pts + " !\n(Life x 2 + Gold)\nCan you do better ?", function(b) {
+					if( !b )
+						loop();
+					else
+						haxe.Timer.delay(gameOver, 1);
+				});
+			}
 		}
 	}
 	
@@ -316,11 +313,19 @@ class Game implements haxe.Public {
 		lifes.push({ l : life, t : 1. });
 	}
 	
+	function regen( life : Int, msg : String ) {
+		if( hero.life == hero.maxLife )
+			return false;
+		hero.life += life;
+		if( hero.life > hero.maxLife ) hero.life = hero.maxLife;
+		message(msg);
+		return true;
+	}
+	
 	function init() {
 		cities = [];
 		npcs = [];
 		monsters = [];
-		sprites = [];
 		rnd = new Rand(42);
 		
 		var start = START[SINDEX];
@@ -329,6 +334,9 @@ class Game implements haxe.Public {
 		hero.gold = start.gold;
 		hero.attack = start.att;
 		hero.defense = start.def;
+		if( SINDEX >= 6 ) hero.maxLife = 150;
+		for( i in start.items )
+			hero.addItem(i);
 		
 		for( x in 0...World.SIZE )
 			for( y in 0...World.SIZE )
@@ -338,8 +346,10 @@ class Game implements haxe.Public {
 					cities.push(c);
 				default:
 				}
+		// hidden
+		cities.push(new City(this, 81, 47));
 
-		var mids = [Blob, Spider, GreenOrc, Skeleton, Shadow];
+		var mids = [Blob, Spider, GreenOrc, Skeleton, Shadow, KillerEye, Sparkling, Demon, Dragon];
 		for( m in world.monsters ) {
 			var k = mids[m.i];
 			if( k == null ) throw "Unknown monster #" + m.i+" @"+m.x+","+m.y;
@@ -352,6 +362,72 @@ class Game implements haxe.Public {
 			var p = freeSpace();
 			var n = addNPC(p.x, p.y, npcs[rnd.random(npcs.length)]);
 			n.mspeed *= Math.random() + 0.5;
+		}
+		
+		for( t in world.treasures ) {
+			var k;
+			var onHit = switch( t.i ) {
+				case 0:
+					k = Treasure;
+					function() {
+						var g = 10;
+						hero.gold += g;
+						message("You found a treasure of " + g + " gold !");
+						return true;
+					}
+				case 1:
+					k = Twinkle;
+					function() {
+						var g = 10;
+						hero.gold += g;
+						message("You found a treasure of " + g + " gold !");
+						return true;
+					}
+				case 2:
+					k = Twinkle;
+					function() {
+						var g = 20;
+						hero.gold += g;
+						message("You found a treasure of " + g + " gold !");
+						return true;
+					}
+				case 3:
+					k = Treasure;
+					function() {
+						hero.addItem(DwarfRing);
+						message("You found a Dwarf Ring !\nIt makes you friend of the Dwarfs !");
+						return true;
+					}
+				case 4:
+					k = Treasure;
+					function() {
+						if( !regen(30,"You found a small potion !\n(you got +30 life)") )
+							message("The potion just broke in your hands");
+						return true;
+					}
+				case 5:
+					k = Treasure;
+					function()
+					{
+						hero.defense += 5;
+						message("You found the Elves Helmet !\nYou get +5 in Def");
+						return true;
+					}
+				case 6:
+					k = Treasure;
+					function()
+					{
+						hero.attack++;
+						message("You got the ULTIMATE WEAPON IMPROVEMENT !\nYou get +1 in Att");
+						return true;
+					}
+				default:
+					throw "Unknon treasure #" + t.i + " @" + t.x + "," + t.y;
+			}
+			t.e = new Entity(t.x, t.y, k);
+			if( k == Twinkle )
+				t.e.aspeed *= 4;
+			t.e.onHit = onHit;
 		}
 
 		var n = addNPC(38, 93, Soldier);
@@ -380,6 +456,7 @@ class Game implements haxe.Public {
 				message("It's dangerous to go up there,\nyou will need a better armor !");
 			return true;
 		}
+		
 		var n = addNPC(92, 101, King);
 		n.locked = true;
 		n.onHit = function()
@@ -392,7 +469,16 @@ class Game implements haxe.Public {
 			});
 			return true;
 		}
-				
+		
+		var n = addNPC(55, 48, WoodCuter);
+		n.locked = true;
+		n.onHit = function() {
+			if( hero.x < n.x )
+				return false;
+			message("While I'm looking this way,\nI'll not let you go there !");
+			return true;
+		};
+		
 		world.initPath(hero.x, hero.y);
 		drawWorld();
 		update(null);
@@ -406,19 +492,52 @@ class Game implements haxe.Public {
 	}
 	
 	function explore( x : Int, y : Int ) {
+		function spawn(k, dx, dy) {
+			var m = new Monster(x + dx, y + 1 + dy, k);
+			monsters.push(m);
+		}
 		switch( world.addr(x,y) )
 		{
+			case world.addr(54, 56):
+				hero.goto(52, 88);
+				return false;
+			case world.addr(52, 87):
+				hero.goto(54, 57);
+				return false;
 			case world.addr(51, 73):
-				message("You found a bit of ore");
+				var g = 30;
+				message("You found " + g + " gold in that cave !");
+				hero.gold += g;
+			case world.addr(35, 87):
+				spawn(Shadow, 0, -1);
+				spawn(Shadow, -1, 0);
+				spawn(Shadow, 0, 1);
+				message("Some monsters have appeared !");
+			case world.addr(26, 79):
+				hero.goto(24, 45);
+				return false;
+			case world.addr(24, 44):
+				message("Uh-oh !\nSeems like you can't go back from here !");
+				return false;
+			case world.addr(52, 8):
+				hero.goto(53, 24);
+				return false;
+			case world.addr(53, 23):
+				hero.goto(52, 9);
+				return false;
+			case world.addr(46, 27):
+				var g = 5;
+				message("You found " + g + " gold in that cave !");
+				hero.gold += g;
 			default:
-				trace("Unknown cave @" + x + "," + y);
+				throw ("Unknown cave @" + x + "," + y);
 		}
+		return true;
 	}
 	
 	function collide( x : Int, y : Int, isHero = false ) {
-		switch( world.get(x,y) )  {
-		case Sea, DarkSea, Mountain, SnowMountain, DarkMountain:
-			return true;
+		var t = world.get(x, y);
+		switch( t )  {
 		case Cave:
 			if( isHero ) {
 				var p = { x : x, y : y };
@@ -429,16 +548,19 @@ class Game implements haxe.Public {
 						if( b ) {
 							if( !hero.hasItem(Torch) )
 								message("It's too dark inside here : you need a torch !");
-							else {
-								explore(p.x,p.y);
+							else if( explore(p.x,p.y) )
 								hero.setFlag(p);
-							}
 						}
 					});
 				}
 			}
 			return true;
 		default:
+			if( world.collide(t) ) {
+				if( t == FakeWater && isHero )
+					return false;
+				return true;
+			}
 		}
 		for( n in npcs )
 			if( n.x == x && n.y == y )
@@ -490,6 +612,18 @@ class Game implements haxe.Public {
 		if( !messageMC.visible && hero.life <= 0 ) {
 			hero.life = 0;
 			message("Game Over");
+		}
+		
+		if( DEBUG ) {
+			if( Key.isToggled("G".code) )
+				hero.gold += 5;
+			if( Key.isToggled("L".code) )
+				hero.life += 5;
+			if( Key.isToggled("T".code) ) {
+				var x = Std.int(root.mouseX / 5);
+				var y = Std.int(root.mouseY / 5);
+				hero.goto(x, y);
+			}
 		}
 		
 		var scale = 5 * root.scaleX;
@@ -569,7 +703,7 @@ class Game implements haxe.Public {
 							askBuy(c, "Buy a dagger (+5 Att) for $G gold ?", 10, function() { hero.attack += 5; message("You attack has raised to " + hero.attack); } );
 						case world.addr(13,116):
 							askBuy(c, "Buy a shield (+5 Def) for $G gold ?", 20, function() { hero.defense += 5; message("Your defense has raised to " + hero.defense); } );
-						case world.addr(72, 111):
+						case world.addr(72, 111), world.addr(56,39):
 							ask("Heal 30 Life for 30 gold ?", function(b) if( b ) {
 								var delta = hero.maxLife - hero.life;
 								if( delta < 30 )
@@ -579,21 +713,58 @@ class Game implements haxe.Public {
 							});
 						case world.addr(100, 97):
 							askBuy(c, "Buy a leather armor (+5 Def) for $G gold ?", 30, function() { hero.defense += 5; message("Your defense has raised to " + hero.defense); } );
-						case world.addr(42, 86), world.addr(45,63):
+						case world.addr(42, 86), world.addr(45,63), world.addr(55,54):
 							askBuy(c, "This City of Wonders will heal you for free.\nOne Time", 0, function() { hero.life = hero.maxLife; message("You have been fully healed !"); } );
 						case world.addr(23, 64):
 							if( hero.hasFlag(c) )
 								message("The Shadows want more of your Life but have\nnothing to trade for it !");
 							else
-								ask("This City of Shadows will eat 30 of your Life\nin exchange of a King Letter", function(b) {
+								ask("This City of Shadows will eat 30 of your Life\nin exchange of a King letter", function(b) {
 									if( b ) {
 										hero.life -= 30;
 										hero.setFlag(c);
 										hero.addItem(KingLetter);
+										message("You got the King letter !\nBut who need this ?");
 									}
 								});
+						case world.addr(12, 90):
+							askBuy(c, "Welcome to the city of priests,\ndo you want blessing for $G gold ?\n(skeletons get -5 Att)", 40, function() { hero.addItem(Blessing); message("You got some blessing !"); } );
+						case world.addr(42, 56):
+							askBuy(c, "The shades are weak against magic.\nWizardry can help if you have $G gold.\n(shades loose immunity)", 20, function() { hero.addItem(Magic); message("You got magic !"); } );
+						case world.addr(29, 71):
+							askBuy(c, "A copper armor is not that bad, you know ?\nAt least it's cheap : $G gold (+5 Def)", 25, function() { hero.defense += 5; message("You got the Copper armor !\nDoes it really work ???"); } );
+						case world.addr(73, 79):
+							askBuy(c, "Dwarf don't like dark.\nDwarf make torches.\nYou buy for $G ?", hero.hasItem(DwarfRing) ? 30 : 50, function() { hero.addItem(Torch); message("You got torches !\nTime to explore some caves, maybe ?\nBut be careful !"); } );
+						case world.addr(81, 47):
+							askBuy(c, "Welcome to the Hidden City of Stormfall\nWe make strong weapons.\nWant to buy a sword for $G ?\n(+10 Att)", 100, function() { hero.attack += 10; message("You got a great sword !"); } );
+						case world.addr(110, 70):
+							if( hero.hasFlag(c) )
+								message("Thank you for visiting us !");
+							else
+								ask("It's been a very long time with no visitor !\nTo reward you, we will raise your max life !", function(b) {
+									if( b ) {
+										hero.maxLife += 50;
+										hero.setFlag(c);
+										message("You got +50 max life !");
+									}
+								});
+						case world.addr(80, 22):
+							askBuy(c, "If you want the ultimate weapon, it's yours !\n(Only $G gold for +5 Att)", 100, function() {
+								hero.attack += 5;
+								message("You got the ULTIMATE WEAPON !\nIs it real ???");
+							});
+						case world.addr(38, 16):
+							askBuy(c, "Welcome to the ruins of Coren.\nThe dragon is not very far, you should heal yourself.\nHeal for $G gold ?", 80, function() {
+								hero.life = hero.maxLife;
+								message("Your life as returned !");
+							});
+						case world.addr(34, 30):
+							askBuy(c, "Welcome to the ruins of Coren.\nIf you want the ultimate armor, it's your !\n(Only $G gold for +5 Def)", 80, function() {
+								hero.defense += 5;
+								message("You got the ULTIMATE ARMOR !\n(looks like it's made in plastic)");
+							});
 						default:
-							trace("Unknown city @" + c.x + "," + c.y);
+							throw ("Unknown city @" + c.x + "," + c.y);
 						}
 					}
 				if( !found )
@@ -607,23 +778,14 @@ class Game implements haxe.Public {
 			var dx = t.x - hero.x;
 			var dy = t.y - hero.y;
 			var d = dx * dx + dy * dy;
-			if( t.twink != null && !t.twink.alive() )
-				t.twink = null;
-			if( d == 0 ) {
+			t.e.update();
+			if( d == 0 && t.e.onHit() ) {
 				world.treasures.remove(t);
+				t.e.remove();
 				hero.setFlag(t);
-				hero.gold += t.g;
-				message("You found a treasure of " + t.g + " gold !");
-			} else if( d <= 4 && Std.random(d * 40) == 0 && t.twink == null ) {
-				var s = addSprite(t.x, t.y, Twinkle);
-				s.mc.alpha = 1 / Math.sqrt(d);
-				s.aspeed *= 4;
-				t.twink = s;
 			}
 		}
 		
-		for( s in sprites.copy() )
-			s.update();
 		for( n in npcs )
 			n.update();
 		for( m in monsters )
@@ -640,12 +802,6 @@ class Game implements haxe.Public {
 		}
 			
 		dm.ysort(PLAN_NPC);
-	}
-	
-	function addSprite(x, y, k) {
-		var e = new Sprite(x, y, k);
-		sprites.push(e);
-		return e;
 	}
 	
 	function drawWorld() {

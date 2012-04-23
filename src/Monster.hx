@@ -49,8 +49,12 @@ class Monster extends Entity {
 			case Blob: { name : "Blob", life : 10, att : 10, def : 5, gold : 1 };
 			case Spider: { name : "Spider", life : 20, att : 20, def : 10, gold : 10 };
 			case GreenOrc: { name : "Green Orc", life : 20, att : 15, def : 5, gold : 5 };
-			case Skeleton: { name : "Skeleton", life : 30, att : 20, def : 10, gold : 4 };
-			case Shadow: { name : "Shadow", life : 10, att : 30, def : game.hero.hasItem(LightSaber) ? 99 : 15, gold : 10 };
+			case Skeleton: { name : "Skeleton", life : 30, att : 20 - (game.hero.hasItem(Blessing)?5:0), def : 10, gold : 4 };
+			case Shadow: { name : "Shadow", life : 10, att : 25, def : game.hero.hasItem(Magic) ? 10 : 99, gold : 10 };
+			case KillerEye: { name : "KillerEye", life : 100, att : game.hero.defense + 5, def : 0, gold : 2 };
+			case Sparkling: { name : "Sparkling", life : 15, att : 25, def : 15, gold : 5 };
+			case Demon: { name : "Demon", life : 50, att : 30, def : 15, gold : 20 };
+			case Dragon: { name : "Dragon", life: 100, att : 40, def : 20, gold : 0 };
 			default: { name : "???", life : 1, att : 0, def : 0, gold : 0 };
 		};
 	}
@@ -62,7 +66,8 @@ class Monster extends Entity {
 		var d = dx * dx + dy * dy;
 		if( path == null && d <= 9 && dist(this, hero) <= 3 )
 			path = [];
-		wait -= attSpeed;
+		if( !game.messageMC.visible )
+			wait -= attSpeed;
 		if( path != null && canMove() ) {
 			var p = path.pop();
 			if( p == null ) {

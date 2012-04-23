@@ -55,6 +55,15 @@ class Entity {
 		curFrame = -1;
 	}
 	
+	public function goto(tx,ty) {
+		px = x = tx;
+		py = y = ty;
+	}
+	
+	public dynamic function onHit() {
+		return false;
+	}
+	
 	public function canMove() {
 		var d = Math.abs(px - x) + Math.abs(py - y);
 		return d <= mspeed;
@@ -96,6 +105,12 @@ class Entity {
 		if( iframe != curFrame ) {
 			curFrame = iframe;
 			bmp.bitmapData = t[iframe];
+			if( iframe == 0 && kind == Twinkle ) {
+				var dx = x - game.hero.x;
+				var dy = y - game.hero.y;
+				var d = dx * dx + dy * dy;
+				bmp.visible = bmp.visible ? false : Std.random(d) == 0;
+			}
 		}
 	}
 	

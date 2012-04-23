@@ -12,11 +12,13 @@ class Npc extends Entity {
 		path = [];
 	}
 	
-	public dynamic function onHit() {
+	public dynamic override function onHit() {
 		var rtexts = [
 			"Elfs love cabbage.\nA lot !",
 		];
-		game.message(rtexts[Rand.hash(id) % rtexts.length]+Std.string(target));
+		game.message(rtexts[Rand.hash(id) % rtexts.length]);
+		if( target == null || path == null || path.length == 0 || (target.x == game.hero.x && target.y == game.hero.y) )
+			chooseTarget();
 		return true;
 	}
 	

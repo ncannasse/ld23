@@ -12,12 +12,17 @@ enum Block {
 	DarkSea;
 	CityPos;
 	Cave;
-	SwampForest;
+	SwampMountain;
 	Swamp;
 	SnowMountain;
 	DarkField;
-	DarkMountain;
 	DarkForest;
+	DarkMountain;
+	FloodField;
+	FloodForest;
+	FloodMountain;
+	FakeWater;
+	Magma;
 }
 
 enum NpcKind {
@@ -32,10 +37,16 @@ enum NpcKind {
 	Skeleton;
 	Shadow;
 	Treasure;
+	KillerEye;
+	Sparkling;
+	Demon;
+	Dragon;
 }
 
 enum Item {
 	KingLetter;
 	Torch;
-	LightSaber;
+	Magic;
+	Blessing;
+	DwarfRing;
 }

@@ -16,7 +16,7 @@ class World {
 	var tmp : flash.Vector<Int>;
 	var tmpPos : Int;
 	public var monsters : Array<{ x : Int, y : Int, i : Int }>;
-	public var treasures : Array<{ x : Int, y : Int, g : Int, twink : Sprite }>;
+	public var treasures : Array<{ x : Int, y : Int, i : Int, e : Entity }>;
 	
 	public function new(g) {
 		game = g;
@@ -27,27 +27,18 @@ class World {
 		monsters = [];
 		treasures = [];
 		var bmp = new WorldBmp(0, 0);
-		function bestSoil(x, y) {
-			var s = get(x, y - 1);
-			return switch( s ) {
-			case Field, Sand, DarkField, Swamp: s;
-			case DarkForest, DarkMountain: DarkField;
-			case SwampForest: Swamp;
-			default: Field;
-			}
-		}
 		for( x in 0...SIZE ) {
 			t[x] = [];
 			fog[x] = [];
 			for( y in 0...SIZE ) {
-				fog[x][y] = 1;
+				fog[x][y] = Game.DEBUG ? 0 : 1;
 				var v = bmp.getPixel(x, y);
 				t[x][y] = switch( v ) {
-				case 0x0000FE: Sea;
+				case 0x00007F: Sea;
 				case 0x00FE00: Field;
 				case 0x7F7F7F: Mountain;
 				case 0x007F00: Forest;
-				case 0x004B00: SwampForest;
+				case 0x004B00: SwampMountain;
 				case 0xFEFE00: Sand;
 				case 0xFEFEFE: CityPos;
 				case 0x000000: Cave;
@@ -56,11 +47,31 @@ class World {
 				case 0xBDFE00: DarkField;
 				case 0x606060: DarkMountain;
 				case 0x418900: DarkForest;
+				case 0x5DEBB5: FloodField;
+				case 0x14B176: FloodForest;
+				case 0x44417F: FloodMountain;
+				case 0x0000C6: FakeWater;
+				case 0x9C3A01: Magma;
 				case 0xFC8E4C:
-					treasures.push( { x:x, y:y, g : 10, twink : null } );
+					treasures.push( { x:x, y:y, i : 0, e : null } );
 					bestSoil(x, y);
-				case 0xFB8B02:
-					treasures.push( { x:x, y:y, g : 20, twink : null } );
+				case 0xE25401:
+					treasures.push( { x:x, y:y, i : 1, e : null } );
+					bestSoil(x, y);
+				case 0xBA4501:
+					treasures.push( { x:x, y:y, i : 2, e : null } );
+					bestSoil(x, y);
+				case 0xBF4701:
+					treasures.push( { x:x, y:y, i : 3, e : null } );
+					bestSoil(x, y);
+				case 0x005EFE:
+					treasures.push( { x:x, y:y, i : 4, e : null } );
+					bestSoil(x, y);
+				case 0xEC5801:
+					treasures.push( { x:x, y:y, i : 5, e : null } );
+					bestSoil(x, y);
+				case 0x6E2900:
+					treasures.push( { x:x, y:y, i : 6, e : null } );
 					bestSoil(x, y);
 				default:
 					if( v & 0xFFFF == 0 ) {
@@ -68,7 +79,7 @@ class World {
 						bestSoil(x, y);
 					} else {
 						trace("");
-						trace("Unknown " + StringTools.hex(bmp.getPixel(x, y)));
+						trace("Unknown " + StringTools.hex(bmp.getPixel(x, y))+" @"+x+","+y);
 						Sea;
 					}
 				}
@@ -90,6 +101,18 @@ class World {
 						set(x, y, DarkSea);
 				}
 		bmp.dispose();
+	}
+
+	function bestSoil(x, y) {
+		var s = get(x, y - 1);
+		return switch( s ) {
+		case Field, Sand: s;
+		case DarkField, DarkForest, DarkMountain: DarkField;
+		case FloodForest, FloodMountain, FloodField: FloodField;
+		case Swamp, SwampMountain: Swamp;
+		case Magma: Magma;
+		default: Field;
+		}
 	}
 	
 	public function clearFog( x, y ) {
@@ -115,18 +138,24 @@ class World {
 		return x | (y << 7);
 	}
 	
+	public function collide(t) {
+		return switch( t ) {
+			case Sea, DarkSea, Mountain, DarkMountain, Cave, SnowMountain, FloodMountain, SwampMountain, FakeWater: true;
+			default: false;
+		}
+	}
+	
 	@:nodebug
 	public function initPath( x, y ) {
 		// init Path
 		for( i in 0...SIZE * SIZE )
 			path[i] = SIZE * SIZE;
 		for( x in 0...SIZE )
-			for( y in 0...SIZE )
-				switch( t[x][y] ) {
-				case Sea, DarkSea, Mountain, DarkMountain, Cave, SnowMountain:
+			for( y in 0...SIZE ) {
+				var t = t[x][y];
+				if( collide(t) || t == FakeWater )
 					path[addr(x, y)] = -1;
-				default:
-				}
+			}
 		for( n in game.npcs )
 			path[addr(n.x, n.y)] = -1;
 		for( m in game.monsters )
@@ -204,8 +233,11 @@ class World {
 		return switch(k) {
 			case Sea: -1;
 			case Sand: 1;
-			case DarkForest, Swamp: 2;
-			default: 3;
+			case SwampMountain, Swamp: 2;
+			case DarkForest, DarkField, DarkMountain: 3;
+			case Magma: 4;
+			case FloodField, FloodForest, FloodMountain: 5;
+			default: 6;
 		}
 	}
 	
@@ -232,7 +264,7 @@ class World {
 						// move it around
 						p.x += rnd.random(3) - 1;
 						p.y += rnd.random(4) == 0 ? -1 : 0;
-					case SwampForest:
+					case SwampMountain:
 						w.copyPixels(getTileAt(Swamp,x,y), rall, p);
 						// move it around
 						p.x += rnd.random(3) - 1;
@@ -242,8 +274,13 @@ class World {
 						// move it around
 						p.x += rnd.random(3) - 1;
 						p.y += rnd.random(4) == 0 ? -1 : 0;
-					case CityPos:
-						w.copyPixels(getTileAt(get(x,y-1),x,y), rall, p);
+					case FloodForest, FloodMountain:
+						w.copyPixels(getTileAt(FloodField,x,y), rall, p);
+						// move it around
+						p.x += rnd.random(3) - 1;
+						p.y += rnd.random(4) == 0 ? -1 : 0;
+					case CityPos, Cave:
+						w.copyPixels(getTileAt(bestSoil(x,y),x,y), rall, p);
 					default:
 				}
 				var bmp = getTileAt(t,x,y);
