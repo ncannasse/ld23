@@ -15,7 +15,7 @@ class Hero extends Entity {
 	public var items : Array<Item>;
 	
 	public function new(x, y) {
-		super(x, y, Walker);
+		super(x, y, HeroSprite);
 		items = [];
 		flags = new IntHash();
 		cx = cy = 0;

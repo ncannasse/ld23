@@ -19,7 +19,7 @@ class Game implements haxe.Public {
 	static var WIDTH = 640;
 	static var HEIGHT = 480;
 	
-	static var DEBUG = false;
+	static var DEBUG = true;
 	
 	static var SINDEX = DEBUG ? 8 : 0;
 	static var START = [

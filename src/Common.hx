@@ -41,6 +41,7 @@ enum NpcKind {
 	Sparkling;
 	Demon;
 	Dragon;
+	HeroSprite;
 }
 
 enum Item {
