@@ -83,12 +83,12 @@ class Game implements haxe.Public {
 		tiles = new Tiles();
 		
 		lifes  = [];
-		sizeX = Math.ceil(WIDTH / (5 * root.scaleX)) + 1;
-		sizeY = Math.ceil(HEIGHT / (5 * root.scaleX)) + 1;
+		sizeX = Math.ceil(WIDTH / (5 * root.scaleX)) + 2;
+		sizeY = Math.ceil(HEIGHT / (5 * root.scaleX)) + 2;
 		
 		initMessage();
 		initUI();
-		message("Welcome to Noland !\n\nMove with arrows/WASD !\nbeware of monsters\n(Click me or space to start)");
+		message("Welcome to Noland !\n\nMove with arrows/WASD !\nbeware of monsters)\n(Click me or space to start)");
 		
 		helpText = newText();
 		helpText.x = 5;
@@ -644,8 +644,8 @@ class Game implements haxe.Public {
 		root.x = -scroll.x;
 		root.y = -scroll.y;
 		
-		var ix = Std.int(scroll.x / scale);
-		var iy = Std.int(scroll.y / scale);
+		var ix = Std.int(scroll.x / scale) - 1;
+		var iy = Std.int(scroll.y / scale) - 1;
 		if( ix != scroll.ix || iy != scroll.iy ) {
 			scroll.ix = ix;
 			scroll.iy = iy;
