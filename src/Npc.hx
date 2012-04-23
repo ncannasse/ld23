@@ -11,12 +11,41 @@ class Npc extends Entity {
 		waitMove = 0;
 		path = [];
 	}
+
+	public static var TEXTS = [
+		"Elfs love cabbage.\nA lot !",
+		"There is a Dragon somewhere,\na big one...",
+		"Dwarfs like money a lot,\nonly their friends get good prices",
+		"The north is entirely frozen,\nexcept the place where the Dragon live",
+		"I've seen many people in my life.\nI mean, including you.",
+		"Did you knew that shadows are very weak\nagainst magic ?",
+		"I would like one time to go\ntake a bath at one of the\ncity of wonders...",
+		"Gold or Life ?\nSometimes it's hard to choose.\nIn many different ways actually...",
+		"I you push people they might\nrun away from you.\nMaybe.",
+		"This is the land of Noland.\nDo you believe it ?",
+		"There is a lost city somewhere\nsince nobody goes there I heard\nthey are happy to have visitors",
+		"A city which cannot be seen ?\nNever heard such a story...",
+		"Sometimes there are shorter paths\nsomethimes they are longer ones.\nDepends on your luck ?",
+		"Demons are strong creatures.\nDon't fight them until you're ready !",
+		"The King was supposed to protect us.\nI guess he's having fun again instead...\nThat's what King are doing right ?",
+		"Next time I'll vote for another King.\nYes, Noland is a Kingocracy",
+		"I've seen the Dragon !\nNo I'm joking...\nI would be dead in that case...",
+		"You need a Torch to enter a cave\nbut maybe you know that already.",
+		"Some caves lead to other part of the world.\nBe careful sometimes you can't return !",
+		"Don't forget to kill weak monsters !\nYou'll get some extra gold !",
+		"I wish I could walk on the sea\nso I can leave Noland to go on a trip in Europa.",
+		"I have to idea with a 'Computer' is.\nWhat about you ?",
+		"Dwarfs are leaving at the top of a of mountain",
+		"I am ERROR.\n... I guess",
+		"I lost my NyanCat !\nTell me if you find it somewhere !",
+		"I fight monsters all the day.\nDuring the week-end I fight with my wife.\nShe's the most frightening !",
+		"The ruins of Coren are at the North-West\nof Noland.\nThey are dangerous !",
+		"I wish I could have play some music.\nBut looks like I didn't have time for it",
+		"Blobs tend to gather in forests.\nI'm happy to slash them anytime.\nPoor creatures...",
+	];
 	
 	public dynamic override function onHit() {
-		var rtexts = [
-			"Elfs love cabbage.\nA lot !",
-		];
-		game.message(rtexts[Rand.hash(id) % rtexts.length]);
+		game.message(TEXTS[id - game.npcs[0].id]);
 		if( target == null || path == null || path.length == 0 || (target.x == game.hero.x && target.y == game.hero.y) )
 			chooseTarget();
 		return true;

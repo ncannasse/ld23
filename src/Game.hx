@@ -19,7 +19,7 @@ class Game implements haxe.Public {
 	static var WIDTH = 640;
 	static var HEIGHT = 480;
 	
-	static var DEBUG = true;
+	static var DEBUG = false;
 	
 	static var SINDEX = DEBUG ? 8 : 0;
 	static var START = [
@@ -88,7 +88,7 @@ class Game implements haxe.Public {
 		
 		initMessage();
 		initUI();
-		message("Move with arrows/WASD !\nBeware of monsters !\n(Click me or space to start)");
+		message("Welcome to Noland !\n\nMove with arrows/WASD !\nbeware of monsters\n(Click me or space to start)");
 		
 		helpText = newText();
 		helpText.x = 5;
@@ -358,7 +358,7 @@ class Game implements haxe.Public {
 		}
 
 		var npcs = [Soldier, WoodCuter, King, Walker];
-		for( i in 0...30 ) {
+		for( i in 0...Npc.TEXTS.length ) {
 			var p = freeSpace();
 			var n = addNPC(p.x, p.y, npcs[rnd.random(npcs.length)]);
 			n.mspeed *= Math.random() + 0.5;
