@@ -33,49 +33,61 @@ class World {
 			for( y in 0...SIZE ) {
 				fog[x][y] = Game.DEBUG ? 0 : 1;
 				var v = bmp.getPixel(x, y);
+				#if !haxe_210
+				// FIX : this will fix invalid 24-bit PNG decoding by flash
+				var r = v >> 16;
+				var g = (v >> 8) & 0xFF;
+				var b = v & 0xFF;
+				if( r != 0 ) r++;
+				if( g != 0 ) g++;
+				if( b != 0 ) b++;
+				v = (r << 16) | (g << 8) | b;
+				if( v == 0xC7 ) v = 0x01C7;
+				if( v == 0x6F2A00 ) v++;
+				#end
 				t[x][y] = switch( v ) {
-				case 0x00007F: Sea;
-				case 0x00FE00: Field;
-				case 0x7F7F7F: Mountain;
-				case 0x007F00: Forest;
-				case 0x004B00: SwampMountain;
-				case 0xFEFE00: Sand;
-				case 0xFEFEFE: CityPos;
+				case 0x000080: Sea;
+				case 0x00FF00: Field;
+				case 0x808080: Mountain;
+				case 0x008000: Forest;
+				case 0x004C00: SwampMountain;
+				case 0xFFFF00: Sand;
+				case 0xFFFFFF: CityPos;
 				case 0x000000: Cave;
-				case 0x82D183: Swamp;
-				case 0xB1B1B1: SnowMountain;
-				case 0xBDFE00: DarkField;
-				case 0x606060: DarkMountain;
-				case 0x418900: DarkForest;
-				case 0x5DEBB5: FloodField;
-				case 0x14B176: FloodForest;
-				case 0x44417F: FloodMountain;
-				case 0x0000C6: FakeWater;
-				case 0x9C3A01: Magma;
-				case 0xFC8E4C:
+				case 0x83D284: Swamp;
+				case 0xB2B2B2: SnowMountain;
+				case 0xBEFF00: DarkField;
+				case 0x616161: DarkMountain;
+				case 0x428A00: DarkForest;
+				case 0x5EECB6: FloodField;
+				case 0x15B277: FloodForest;
+				case 0x454280: FloodMountain;
+				case 0x0001C7: FakeWater;
+				case 0x9D3B02: Magma;
+				case 0xFD8F4D:
 					treasures.push( { x:x, y:y, i : 0, e : null } );
 					bestSoil(x, y);
-				case 0xE25401:
+				case 0xE35502:
 					treasures.push( { x:x, y:y, i : 1, e : null } );
 					bestSoil(x, y);
-				case 0xBA4501:
+				case 0xBB4602:
 					treasures.push( { x:x, y:y, i : 2, e : null } );
 					bestSoil(x, y);
-				case 0xBF4701:
+				case 0xC04802:
 					treasures.push( { x:x, y:y, i : 3, e : null } );
 					bestSoil(x, y);
-				case 0x005EFE:
+				case 0x005FFF:
 					treasures.push( { x:x, y:y, i : 4, e : null } );
 					bestSoil(x, y);
-				case 0xEC5801:
+				case 0xED5902:
 					treasures.push( { x:x, y:y, i : 5, e : null } );
 					bestSoil(x, y);
-				case 0x6E2900:
+				case 0x6F2A01:
 					treasures.push( { x:x, y:y, i : 6, e : null } );
 					bestSoil(x, y);
 				default:
 					if( v & 0xFFFF == 0 ) {
-						monsters.push( { x : x, y : y, i : 0xFE - (v >> 16) } );
+						monsters.push( { x : x, y : y, i : 0xFF - (v >> 16) } );
 						bestSoil(x, y);
 					} else {
 						trace("");

@@ -54,7 +54,7 @@ class Tiles {
 				var color = b.getPixel32(x, y);
 				if( color != bg )
 					empty = false;
-				if( Std.int(color) == 0xFFFE00FE )
+				if( Std.int(color) == 0xFFFE00FE || Std.int(color) == 0xFFFF00FF )
 					b.setPixel32(x, y, 0);
 			}
 		return empty;
